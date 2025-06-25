@@ -10,26 +10,13 @@ RAW_DIR = DATA_DIR / "raw"
 RAW_DIR.mkdir(parents=True, exist_ok=True)
 TIMESTAMP = datetime.now().strftime("%Y%m%d_%H%M%S")
 
-# === 配置区域 ===
+# === config===
 DATASETS = {
     "glue_sst2": {"train": 7000, "validation": 1500, "test": 1500},
     "xsum": {"train": 10500, "validation": 2250, "test": 2250},
     "squad": {"train": 14000, "validation": 3000, "test": 3000},
 }
  
-# load required datasets
-# train_set_sst2 = load_dataset("glue", "sst2")["train"]
-# val_set_sst2 = load_dataset("glue", "sst2")["validation"]
-# test_set_sst2 = load_dataset("glue", "sst2")["test"]
-
-# train_set_squad= load_dataset("squad")["train"]
-# val_set_squad = load_dataset("squad")["validation"]
-# test_set_squad= load_dataset("squad")["test"]
-
-# train_set_xsum= load_dataset("xsum")["train"]
-# val_set_xsum = load_dataset("xsum")["validation"]
-# test_set_xsum= load_dataset("xsum")["test"]
-
 
 def sample_and_save(df: pd.DataFrame, size: int, filename: str):
     print(f"📦 Sampling {size} rows → {filename}")
@@ -57,7 +44,7 @@ def main():
         mainset = parts[0]
         subset = parts[1] if len(parts) > 1 else None
 
-        print(f"\n🚀 Loading dataset: {mainset} {f'({subset})' if subset else ''}")
+        print(f"\nLoading dataset: {mainset} {f'({subset})' if subset else ''}")
         try:
             if subset:
                 dataset_dict = load_dataset(mainset, subset) 
@@ -68,8 +55,8 @@ def main():
 
         # squad doesnt have test set
         if dataset_name == "squad" and "test" not in dataset_dict:
-            # 手动切 validation 为 val/test 各一半
-            print("🔧 Splitting squad validation set into validation/test")
+            # split validation into half val/test 
+            print("Splitting squad validation set into validation/test")
             val_full = pd.DataFrame(dataset_dict["validation"])
             val_half_1, val_half_2 = train_test_split(val_full, test_size=0.5, random_state=42)
 
@@ -81,7 +68,7 @@ def main():
                 try:
                     df = pd.DataFrame(dataset_dict[set_type])
                 except KeyError:
-                    print(f"❌ {dataset_name} has no split named '{set_type}'")
+                    print(f"{dataset_name} has no split named '{set_type}'")
                     continue
 
                 filename = f"{set_type}_{dataset_name}_{TIMESTAMP}.json"
@@ -91,5 +78,5 @@ def main():
 if __name__ == '__main__':
     # train lora: SST-2 / SQuAD / XSum
     # train router: multi-task example
-    # overall train: 需要你统一设计的数据格式和 task 标签字段
+    # overall train: 
     main()

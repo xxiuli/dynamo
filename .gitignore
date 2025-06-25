@@ -1,0 +1,40 @@
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Model checkpoints
+*.bin
+*.ckpt
+*.pt
+*.npz
+
+# Hugging Face output folders
+models/
+saved_adapters/
+output/
+checkpoints/
+
+# Tokenizer files
+*.txt
+tokenizer_config.json
+special_tokens_map.json
+merges.txt
+vocab.json
+
+# Jupyter checkpoints
+.ipynb_checkpoints/
+
+# Environment
+.env
+.venv/
+*.egg-info/
+dist/
+build/
+
+# Colab / Notebook versions of train_lora
+train_lora*.ipynb
+train_lora_copy*.py
+train_lora_notes*.py
+train_lora_debug*.py
