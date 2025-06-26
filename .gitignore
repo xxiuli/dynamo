@@ -36,5 +36,6 @@ build/
 # Colab / Notebook versions of train_lora
 train_lora*.ipynb
 train_lora_copy*.py
+train_lora_squad copy.py
 train_lora_notes*.py
 train_lora_debug*.py
