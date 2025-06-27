@@ -11,10 +11,16 @@ RAW_DIR.mkdir(parents=True, exist_ok=True)
 TIMESTAMP = datetime.now().strftime("%Y%m%d_%H%M%S")
 
 # === config===
+# DATASETS = {
+#     "glue_sst2": {"train": 7000, "validation": 1500, "test": 1500},
+#     "xsum": {"train": 10500, "validation": 2250, "test": 2250},
+#     "squad": {"train": 14000, "validation": 3000, "test": 3000},
+# }
+
 DATASETS = {
-    "glue_sst2": {"train": 7000, "validation": 1500, "test": 1500},
-    "xsum": {"train": 10500, "validation": 2250, "test": 2250},
-    "squad": {"train": 14000, "validation": 3000, "test": 3000},
+    "glue_sst2": {"train":1500, "validation": 300, "test": 300},
+    "xsum": {"train": 1500, "validation": 300, "test": 300},
+    "squad": {"train": 1500, "validation": 300, "test": 300},
 }
  
 
@@ -58,11 +64,11 @@ def main():
             # split validation into half val/test 
             print("Splitting squad validation set into validation/test")
             val_full = pd.DataFrame(dataset_dict["validation"])
-            val_half_1, val_half_2 = train_test_split(val_full, test_size=0.5, random_state=42)
+            val_half_1, val_half_2 = train_test_split(val_full, test_size=0.5, random_state=38)
 
-            sample_and_save(pd.DataFrame(dataset_dict["train"]), splits["train"], f"train_{dataset_name}_{TIMESTAMP}.json")
-            sample_and_save(val_half_1, splits["validation"], f"validation_{dataset_name}_{TIMESTAMP}.json")
-            sample_and_save(val_half_2, splits["test"], f"test_{dataset_name}_{TIMESTAMP}.json")
+            sample_and_save(pd.DataFrame(dataset_dict["train"]), splits["train"], f"train_mix_{dataset_name}_{TIMESTAMP}.json")
+            sample_and_save(val_half_1, splits["validation"], f"validation_mix_{dataset_name}_{TIMESTAMP}.json")
+            sample_and_save(val_half_2, splits["test"], f"test_mix_{dataset_name}_{TIMESTAMP}.json")
         else:
             for set_type, size in splits.items():
                 try:
@@ -71,7 +77,7 @@ def main():
                     print(f"{dataset_name} has no split named '{set_type}'")
                     continue
 
-                filename = f"{set_type}_{dataset_name}_{TIMESTAMP}.json"
+                filename = f"{set_type}_mix_{dataset_name}_{TIMESTAMP}.json"
                 sample_and_save(df, size, filename)
 
 

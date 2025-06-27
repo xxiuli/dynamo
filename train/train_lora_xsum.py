@@ -2,19 +2,19 @@ import os
 import json
 import torch
 from torch.utils.data import Dataset, DataLoader
-from transformers import RobertaForQuestionAnswering, RobertaTokenizerFast
+from transformers import RobertaForSequenceClassification, RobertaTokenizerFast
 from peft import get_peft_model, LoraConfig, TaskType
 from datetime import datetime
 from torch.optim import AdamW
 from tqdm import tqdm
+from sklearn.metrics import accuracy_score
 
 timestamp = datetime.now().strftime("%Y%m%d_%H%M%")
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-# BASE_DIR = os.path.abspath("/content/dynamo")
 
-TASK_NAME = 'squad'
-TRAIN_PATH = os.path.join(BASE_DIR, "data", "raw", "train_squad_20250622_192827.json")
-VAL_PATH = os.path.join(BASE_DIR, "data", "raw", "validation_squad_20250622_192827.json")
+TASK_NAME = 'xsum'
+TRAIN_PATH = os.path.join(BASE_DIR, "data", "raw", "train_xsum_20250622_192827.json")
+VAL_PATH = os.path.join(BASE_DIR, "data", "raw", "validation_xsum_20250622_192827.json")
 
 GOOGLE_DRIVE_DIR = f"/content/drive/MyDrive/dynamo_checkpoints_{timestamp}"
 COLAB_LOCAL_DIR = "/content/checkpoints"
@@ -29,12 +29,12 @@ BATCH_SIZE = 16
 EPOCHS = 3
 LR = 3e-4
 
-TASK_TYPE = TaskType.QUESTION_ANS
-LORA_R = 32
+TASK_TYPE = TaskType.SEQ_CLS
+LORA_R = 24
 LORA_ALPHA = 32
 LORA_DROPOUT = 0.1
 
-class SquadDataset(Dataset):
+class XSumDataset(Dataset):
     def __init__(self, datapath, tokenizer, max_len=512):
         with open(datapath, 'r') as f:
             self.samples = [json.loads(line) for line in f]
@@ -43,43 +43,21 @@ class SquadDataset(Dataset):
 
     def __len__(self):
         return len(self.samples)
-    
+
     def __getitem__(self, index):
         item = self.samples[index]
         encoding = self.tokenizer(
-            item['question'],
-            item['context'],
-            truncation='only_second',
+            item['sentence'],
+            truncation=True,
             padding='max_length',
             max_length=self.max_len,
             return_tensors='pt'
         )
-        start_char = item['answers']['answer_start'][0]
-        end_char = start_char + len(item['answers']['text'][0])
-        offsets = self.tokenizer(
-            item["question"],
-            item["context"],
-            truncation="only_second",
-            padding="max_length",
-            max_length=self.max_len,
-            return_offsets_mapping=True
-        )["offset_mapping"]
-        start_position = None
-        end_position = None
-        for i, (start, end) in enumerate(offsets):
-            if start <= start_char < end:
-                start_position = i
-            if start < end_char <= end:
-                end_position = i
-                break
-        if start_position is None or end_position is None:
-            start_position = 0
-            end_position = 0
+        label = item['label']
         return {
             "input_ids": encoding["input_ids"].squeeze(0),
             "attention_mask": encoding["attention_mask"].squeeze(0),
-            "start_positions": torch.tensor(start_position),
-            "end_positions": torch.tensor(end_position),
+            "labels": torch.tensor(label)
         }
 
 def train(model, dataloader, optimizer):
@@ -97,32 +75,24 @@ def train(model, dataloader, optimizer):
 
 def evaluation(model, dataloader):
     model.eval()
-    total_start_correct = 0
-    total_end_correct = 0
-    total_count = 0
+    preds, labels = [], []
     with torch.no_grad():
         for batch in tqdm(dataloader, desc="Evaluating"):
             batch = {k: v.to(DEVICE) for k, v in batch.items()}
             outputs = model(**batch)
-            start_logits = outputs.start_logits
-            end_logits = outputs.end_logits
-            start_preds = torch.argmax(start_logits, dim=1)
-            end_preds = torch.argmax(end_logits, dim=1)
-            start_labels = batch["start_positions"]
-            end_labels = batch["end_positions"]
-            total_start_correct += (start_preds == start_labels).sum().item()
-            total_end_correct += (end_preds == end_labels).sum().item()
-            total_count += start_preds.size(0)
-    acc = (total_start_correct + total_end_correct) / (total_count * 2)
+            logits = outputs.logits
+            preds.extend(torch.argmax(logits, dim=1).cpu().tolist())
+            labels.extend(batch['labels'].cpu().tolist())
+    acc = accuracy_score(labels, preds)
     return acc
 
 def main():
     tokenizer = RobertaTokenizerFast.from_pretrained("roberta-base")
-    train_set = SquadDataset(TRAIN_PATH, tokenizer)
-    val_set = SquadDataset(VAL_PATH, tokenizer)
+    train_set = XSumDataset(TRAIN_PATH, tokenizer)
+    val_set = XSumDataset(VAL_PATH, tokenizer)
     train_loader = DataLoader(train_set, batch_size=BATCH_SIZE, shuffle=True)
     val_loader = DataLoader(val_set, batch_size=BATCH_SIZE)
-    base_model = RobertaForQuestionAnswering.from_pretrained("roberta-base", num_labels=2)
+    base_model = RobertaForSequenceClassification.from_pretrained("roberta-base", num_labels=2)
     for param in base_model.roberta.parameters():
         param.requires_grad = False
     lora_config = LoraConfig(
@@ -133,6 +103,7 @@ def main():
     )
     model = get_peft_model(base_model, lora_config)
     model.to(DEVICE)
+    print(f"✅ Model is now on device: {next(model.parameters()).device}")
     optimizer = AdamW(model.parameters(), lr=LR)
     for epoch in range(EPOCHS):
         print()
@@ -151,6 +122,7 @@ def main():
     model.save_pretrained(final_dir)
     tokenizer.save_pretrained(final_dir)
     torch.save(model.state_dict(), os.path.join(final_dir, f"lora_adapter_{TASK_NAME}_{timestamp}.pth"))
+    
     print(f"✅ Final model saved to: {final_dir}")
     if SAVE_ZIP:
         print("✅ Zipping local checkpoints for download...")
