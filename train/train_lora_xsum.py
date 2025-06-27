@@ -16,7 +16,7 @@ TASK_NAME = 'xsum'
 TRAIN_PATH = os.path.join(BASE_DIR, "data", "raw", "train_xsum_20250622_192827.json")
 VAL_PATH = os.path.join(BASE_DIR, "data", "raw", "validation_xsum_20250622_192827.json")
 
-GOOGLE_DRIVE_DIR = f"/content/drive/MyDrive/dynamo_checkpoints_{timestamp}"
+GOOGLE_DRIVE_DIR = f"/content/drive/MyDrive/dynamo_{TASK_NAME}_checkpoints_{timestamp}"
 COLAB_LOCAL_DIR = "/content/checkpoints"
 os.makedirs(GOOGLE_DRIVE_DIR, exist_ok=True)
 os.makedirs(COLAB_LOCAL_DIR, exist_ok=True)
