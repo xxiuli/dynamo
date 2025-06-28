@@ -39,3 +39,5 @@ train_lora_copy*.py
 train_lora_squad copy.py
 train_lora_notes*.py
 train_router_copy.py
+train_end_to_end_copy
+train_router_1.py

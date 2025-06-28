@@ -7,11 +7,11 @@ timestamp = datetime.now().strftime("%y%m%d_%h%m")
 
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 
-SST2_PATH = os.path.join(BASE_DIR,  "mix", "test_sst2_20250626_152243.json")
-SQUAD_PATH = os.path.join(BASE_DIR,  "mix", "test_squad_20250626_152243.json")
-XSUM_PATH = os.path.join(BASE_DIR, "mix", "test_xsum_20250626_152243.json")
+SST2_PATH = os.path.join(BASE_DIR,  "end2end_mix", "test_mix_glue_sst2_20250628_113304.json")
+SQUAD_PATH = os.path.join(BASE_DIR,  "end2end_mix", "test_mix_squad_20250628_113304.json")
+XSUM_PATH = os.path.join(BASE_DIR, "end2end_mix", "test_mix_xsum_20250628_113304.json")
 
-output_path = os.path.join(BASE_DIR,  "mix", f"test_mix_{timestamp}.jsonl")
+output_path = os.path.join(BASE_DIR,  "end2end_mix", f"test_end2end_{timestamp}.jsonl")
 
 router_samples = []
 

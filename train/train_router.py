@@ -7,6 +7,9 @@ from torch import nn
 from torch.optim import AdamW
 from tqdm import tqdm
 from sklearn.metrics import accuracy_score
+from datetime import datetime
+
+timestamp = datetime.now().strftime("%Y%m%d_%H%M")
 
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
@@ -18,6 +21,18 @@ os.makedirs(SAVE_DIR, exist_ok=True)
 
 TRAIN_PATH = os.path.join(BASE_DIR, "data", "mix", "train_mix_250626_Jun06.jsonl")
 VAL_PATH = os.path.join(BASE_DIR, "data", "mix", "validation_mix_250626_Jun06.jsonl")
+
+
+# results saving
+# 保存路径：Google Drive 和 本地
+GOOGLE_DRIVE_DIR= f"/content/drive/MyDrive/dynamo_checkpoints_{timestamp}"
+COLAB_LOCAL_DIR = "/content/checkpoints"
+os.makedirs(GOOGLE_DRIVE_DIR, exist_ok=True)
+os.makedirs(COLAB_LOCAL_DIR, exist_ok=True)
+
+# 是否每一个EPOCH保存一次
+SAVE_EACH_EPOCH = False
+SAVE_ZIP = False
 
 class TaskRouterDataset(Dataset):
     def __init__(self, datapath, tokenizer, max_len=512):
@@ -135,7 +150,7 @@ def main():
         scheduler.step()
         if acc > best_acc:
             best_acc = acc
-            save_path = os.path.join(SAVE_DIR, f"best_router_epoch{epoch+1}_acc{acc:.4f}.pth")
+            save_path = os.path.join(GOOGLE_DRIVE_DIR, f"best_router_epoch{epoch+1}_acc{acc:.4f}.pth")
             torch.save({
                 'epoch': epoch + 1,
                 'model_state_dict': model.state_dict(),

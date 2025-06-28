@@ -6,7 +6,7 @@ from sklearn.model_selection import train_test_split
 
 # data/scripts/data
 DATA_DIR = Path(__file__).resolve().parent.parent
-RAW_DIR = DATA_DIR / "raw"
+RAW_DIR = DATA_DIR / "end2end_mix"
 RAW_DIR.mkdir(parents=True, exist_ok=True)
 TIMESTAMP = datetime.now().strftime("%Y%m%d_%H%M%S")
 
