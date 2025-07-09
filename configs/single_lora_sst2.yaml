@@ -1,0 +1,45 @@
+# config_single_lora.yaml
+
+# ========= 基本信息 =========
+task_name: sst2
+task_type: classification  # 可选: classification / nli / qa / summarization / ner
+num_labels: 2
+class_names: ['Negative', 'Positive']
+
+# ========= 模型结构 =========
+backbone_model: roberta-base
+
+lora:
+  r: 8  # rank, 4 or 8 or 16
+  alpha: 16 # output = W(x) + (alpha / r) * (A @ B)(x),一般是：8/16/32
+  dropout: 0.1 # 通常设置为 0 ~ 0.1，任务简单时可设为 0；
+  target_modules: ["query", "value"]  # 也可指定 attention 层子模块.attention 层包括："query", "value", "key", "output"
+
+# ========= 训练参数 =========
+train:
+  seed: 42
+  batch_size: 16
+  learning_rate: 2e-4
+  num_epochs: 5
+  max_seq_length: 128
+  optimizer: adamw            # 可选: adamw, sgd, adafactor...
+  lr_scheduler: linear        # 可选: linear, cosine, step
+  warmup_ratio: 0.1           # 可选 warmup，用于 scheduler
+
+# ========= 早停策略（可选）=========
+early_stopping:
+  enabled: true
+  patience: 3
+  monitor: val_loss
+
+# ========= 路径 =========
+data:
+  train_file: data/single_lora_data/glue_sst2_train_07052025_1527.json
+  val_file: data/single_lora_data/glue_sst2_validation_07052025_1527.json
+
+output:
+  save_dir: /content/drive/MyDrive/DynamoRouterCheckpoints/sst2
+  save_best_only: true
+  save_lora_adapter: true
+  save_task_head: true
+  log_dir: /content/drive/MyDrive/DynamoRouterLogs/sst2

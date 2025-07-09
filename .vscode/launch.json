@@ -2,12 +2,29 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Python: train_lora",
+      "name": "Debug single_sampling",
       "type": "python",
       "request": "launch",
-      "program": "${file}",
-      "cwd": "${workspaceFolder}",   // 重点：让工作目录始终是项目根目录
+      "program": "${workspaceFolder}/data/scripts/single_sampling.py",
+      "args": [
+        "--config_doc", "data/configs/single_sampling_tasks.yaml",
+        "--task", "xsum", "conll2003",
+        // "--task", "sst2", "mnli", "qqp", "squad", "xsum", "agnews", "conll2003",
+      ],
       "console": "integratedTerminal"
+    },
+    {
+        "name": "Run Single LoRA Training",
+        "type": "python",
+        "request": "launch",
+        "program": "${workspaceFolder}/train_single_lora.py",
+        "console": "integratedTerminal",
+        "justMyCode": false,
+        "env": {
+          "TOKENIZERS_PARALLELISM": "false"
+        },
+        "cwd": "${workspaceFolder}"
     }
   ]
 }
+
