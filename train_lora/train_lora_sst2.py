@@ -1,13 +1,16 @@
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 import yaml
 import torch
 import json
-from transformers import (AutoModel, AutoTokenizer)
+from transformers import AutoTokenizer
+from transformers import AutoModelForSequenceClassification
 from torch.utils.data import Dataset, DataLoader
 from peft import get_peft_model, LoraConfig, TaskType
-from torch import nn
-from types import SimpleNamespace
 from utils.train_utils import set_seed, freeze_base_model, print_trainable_params
 import trainer
+
 
 CONFIG_PATH = "configs/single_lora_sst2.yaml"
 
@@ -49,20 +52,23 @@ class TextClassificationDataset(Dataset):
             'label': torch.tensor(item['label'], dtype=torch.long)
         }
 
-class LoRAModelWithClassifier(nn.Module):
-    def __init__(self, base_model, hidden_size, num_labels):
-        super().__init__()
-        self.base = base_model
-        self.classifier = nn.Linear(hidden_size, num_labels)
+# class LoRAModelWithClassifier(nn.Module):
+#     def __init__(self, base_model, hidden_size, num_labels):
+#         super().__init__()
+#         self.base = base_model
+#         self.classifier = nn.Linear(hidden_size, num_labels)
 
-    def forward(self, input_ids, attention_mask):
-        outputs = self.base(input_ids=input_ids, attention_mask=attention_mask)
-        logits = self.classifier(outputs.last_hidden_state[:, 0, :])
-        return SimpleNamespace(logits=logits)
+#     def forward(self, input_ids, attention_mask, **kwargs):
+#         print(f"[DEBUG] kwargs passed to base: {kwargs}")
+#         # 手动移除 kwargs 中的非法参数
+#         # assert isinstance(self.base, RobertaModel)
+#         outputs = self.base(input_ids=input_ids, attention_mask=attention_mask)
+#         logits = self.classifier(outputs.last_hidden_state[:, 0, :])
+#         return SimpleNamespace(logits=logits)
 
 def load_config(path):
     try:
-        with open(path, 'r') as f:
+        with open(path, 'r', encoding='utf-8') as f:
             return yaml.safe_load(f)
     except FileNotFoundError:
         raise FileNotFoundError(f"[ERROR] Config file not found: {path}")
@@ -76,7 +82,9 @@ def main():
     
     try:
         tokenizer = AutoTokenizer.from_pretrained(config['backbone_model'])
-        base_model = AutoModel.from_pretrained(config['backbone_model'])
+        base_model = AutoModelForSequenceClassification.from_pretrained(config['backbone_model'], num_labels=config['num_labels'])
+        # base_model = AutoModel.from_pretrained(config['backbone_model'])
+        # print(f"[DEBUG] base_model class: {base_model.__class__}")
     except Exception as e:
         raise RuntimeError(f"[ERROR] Failed to load backbone model/tokenizer: {e}")
     
@@ -96,17 +104,19 @@ def main():
     )
     
     try:
-        lora_base = get_peft_model(base_model, peft_config)
+        # lora_base = get_peft_model(base_model, peft_config)
+        model = get_peft_model(base_model, peft_config)
+        model.to(device)
     except Exception as e:
         raise RuntimeError(f"[ERROR] Failed to inject LoRA: {e}")
 
-    hidden_size = base_model.config.hidden_size
-    num_labels = config['num_labels']
-    model = LoRAModelWithClassifier(lora_base, hidden_size, num_labels)
+    # hidden_size = base_model.config.hidden_size
+    # num_labels = config['num_labels']
+    # model = LoRAModelWithClassifier(lora_base, hidden_size, num_labels)
 
-    freeze_base_model(model)
+    # freeze_base_model(model)
     print_trainable_params(model)
-    model.to(device)
+
     config['train']['steps_per_epoch'] = len(train_loader)
 
     trainer_instance = trainer.SingleTaskTrainer(model, config, device)

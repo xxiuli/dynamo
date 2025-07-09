@@ -1,7 +1,6 @@
-from torch.nn import CrossEntropyLoss
 import os
 from utils.tensorboard_utils import create_writer, plot_confusion_matrix_to_tensorboard
-from utils.train_utils import set_seed, freeze_base_model, print_trainable_params, get_optimizer
+from utils.train_utils import get_optimizer
 import torch
 from tqdm import tqdm
 from sklearn.metrics import accuracy_score
@@ -33,13 +32,13 @@ class SingleTaskTrainer:
         self.device = device
 
         # criterion
-        self.criterion = CrossEntropyLoss()
+        # self.criterion = CrossEntropyLoss()
 
         # output paths
         self.save_dir = config['output']['save_dir']
         os.makedirs(self.save_dir, exist_ok=True)
         self.log_dir = config['output'].get('log_dir', 'runs/default')
-        os.makedirs(self.log_dir)
+        os.makedirs(self.log_dir, exist_ok=True)
 
         try:
             self.writer = create_writer(log_dir=self.log_dir)
@@ -54,7 +53,7 @@ class SingleTaskTrainer:
         self.optimizer = get_optimizer(
             train_config['optimizer'], 
             filter(lambda p: p.requires_grad, model.parameters()), 
-            train_config['learning_rate']
+            float(train_config['learning_rate'])
             )
         
         total_steps = train_config['num_epochs'] * train_config['steps_per_epoch']
@@ -82,12 +81,16 @@ class SingleTaskTrainer:
         for epoch in range(num_epochs):
             self.model.train()
             total_loss = 0
-
             for step, batch in enumerate(tqdm(train_loader, desc=f'Epoch {epoch+1}')):
                 batch = {k :v.to(self.device) for k, v in batch.items()}
-
-                output = self.model(input_ids=batch['input_ids'], attention_mask=batch['attention_mask'])
-                loss = self.criterion(output.logits, batch['label'])
+                output = self.model(
+                    input_ids=batch['input_ids'], 
+                    attention_mask=batch['attention_mask'],
+                    labels=batch['label']
+                    )
+                
+                loss = output.loss
+                # loss = self.criterion(output.logits, batch['label'])
 
                 loss.backward()
                 self.optimizer.step()
@@ -131,8 +134,13 @@ class SingleTaskTrainer:
                 for batch in val_loader:
                     batch = {k: v.to(self.device) for k, v in batch.items()}
 
-                    output = self.model(input_ids=batch['input_ids'], attention_mask=batch['attention_mask'])
-                    loss = self.criterion(output.logits, batch['label'])
+                    output = self.model(
+                        input_ids=batch['input_ids'], 
+                        attention_mask=batch['attention_mask'],
+                        labels=batch['label']
+                        )
+                    loss =  output.loss
+                    # loss = self.criterion(output.logits, batch['label'])
                     total_loss += loss.item()
                     pred = output.logits.argmax(dim=-1).cpu().numpy()
                     preds.extend(pred)
@@ -150,8 +158,9 @@ class SingleTaskTrainer:
         try:
             path = os.path.join(self.save_dir, 'final' if final else '')
             os.makedirs(path, exist_ok=True)
-            self.model.base.save_pretrained(path)
-            torch.save(self.model.classifier.state_dict(), os.path.join(path, "classifier_head.pt"))
+            self.model.save_pretrained(path)
+            self.config['tokenizer'].save_pretrained(path)
+            # torch.save(self.model.classifier.state_dict(), os.path.join(path, "classifier_head.pt"))
             print(f"[INFO] Model saved to {path}")
         except Exception as e:
             print(f"[ERROR] Failed to save model: {e}")

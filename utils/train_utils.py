@@ -1,7 +1,8 @@
 import numpy as np
 import torch
 import random
-from transformers import(AdamW, Adafactor)
+from transformers.optimization import Adafactor
+from torch.optim import AdamW
 
 def set_seed(seed):
     random.seed(seed)   # Python 随机性（如 shuffle）
