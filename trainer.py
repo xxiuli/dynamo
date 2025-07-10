@@ -1,4 +1,5 @@
 import os
+import yaml
 from utils.tensorboard_utils import create_writer, plot_confusion_matrix_to_tensorboard
 from utils.train_utils import get_optimizer
 import torch
@@ -75,7 +76,7 @@ class SingleTaskTrainer:
         self.save_best_only = config['output'].get('save_best_only', True)
         self.best_val_loss = float('inf')
 
-    def train(self, train_loader, val_loader):
+    def train(self, train_loader, val_loader, tokenizer=None):
         num_epochs = self.config['train']['num_epochs']
 
         for epoch in range(num_epochs):
@@ -121,7 +122,7 @@ class SingleTaskTrainer:
             self.writer.add_scalar('Accuracy/Validation', val_acc, epoch)
             self.writer.add_scalar('LearningRate', self.scheduler.get_last_lr()[0], epoch)
         
-        self.save_model(final=True)
+        self.save_model(final=True, tokenizer=tokenizer)
         self.writer.close()
 
     def evaluate(self, val_loader, epoch):
@@ -154,13 +155,28 @@ class SingleTaskTrainer:
             print(f"[ERROR] Evaluation failed at epoch {epoch+1}: {e}")
             return float("inf"), 0.0
         
-    def save_model(self, final=False):
+    def save_model(self, final=False, tokenizer=None):
         try:
             path = os.path.join(self.save_dir, 'final' if final else '')
             os.makedirs(path, exist_ok=True)
-            self.model.save_pretrained(path)
-            self.config['tokenizer'].save_pretrained(path)
+
+            # 保存 adapter
+            self.model.save_pretrained(path) 
+
+            # 保存解码器
+            if tokenizer is not None:
+                tokenizer.save_pretrained(path)
             # torch.save(self.model.classifier.state_dict(), os.path.join(path, "classifier_head.pt"))
+            
+            # 保存 base model（只保存一次）
+            if final and hasattr(self.model, 'base_model'):
+                base_path = os.path.join(self.save_dir, 'base')
+                self.model.base_model.save_pretrained(base_path)
+
+            # 保存训练此模型的CONFIG
+            with open(os.path.join(self.save_dir, 'final', 'config.yaml'), 'w') as f:
+                yaml.dump(self.config, f)
+
             print(f"[INFO] Model saved to {path}")
         except Exception as e:
             print(f"[ERROR] Failed to save model: {e}")
