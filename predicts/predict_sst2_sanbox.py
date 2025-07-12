@@ -21,7 +21,7 @@ model.eval()
 inputs = tokenizer(text, return_tensors='pt', truncation=True, padding=True)
 with torch.no_grad():
     outputs = model(**inputs)
-    predict_class = torch.argmaz(outputs.logits, dim=-1).item()
+    predicted_class = torch.argmaz(outputs.logits, dim=-1).item()
 
 label_map = {0: "Negative", 1: "Positive"}
 print(f"✅ Text: \"{text}\"\n🧠 Prediction: {label_map[predicted_class]}")

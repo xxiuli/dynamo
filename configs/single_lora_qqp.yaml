@@ -1,0 +1,53 @@
+# single_lora_qqp.yaml
+
+task_name: qqp
+task_type: classification
+num_labels: 2
+class_names: ['not_duplicate', 'duplicate']
+
+backbone_model: roberta-base
+
+lora:
+  r: 8
+  alpha: 16
+  dropout: 0.1
+  target_modules: ["query", "value"]
+
+train:
+  seed: 42
+  batch_size: 16
+  learning_rate: 2e-4
+  num_epochs: 3
+  # num_epochs: 1
+  max_seq_length: 128
+  optimizer: adamw
+  lr_scheduler: linear
+  warmup_ratio: 0.1
+
+early_stopping:
+  enabled: true
+  patience: 2
+  monitor: val_acc    # best model
+  mode: max           # val_loss是min，val_acc是max, val_f1是max
+
+data:
+  train_file: data/single_lora_data/glue_qqp_train_07052025_1527.json
+  val_file: data/single_lora_data/glue_qqp_validation_07052025_1527.json
+
+output:
+  save_dir: /content/drive/MyDrive/DynamoRouterCheckpoints/adapter_qqp
+  save_best_only: true
+  monitor_metric: val_acc  # 自动对齐 early_stopping
+  save_lora_adapter: true
+  save_task_head: true
+  log_dir: /content/drive/MyDrive/DynamoRouterLogs/adapter_qqp
+
+# ========= 调试专用 =========
+# 调试时EPOCH可改为: num_epochs: 1
+# 去COLAB训练时要把 skip_training: false, limit_batches: None 
+debug:
+  # skip_training: true       # 跳过训练主循环，只测试evaluate和保存流程
+  skip_training: false 
+  skip_evaluation: false    # 不跳评估，让模型至少走一次评估流程
+  # limit_batches: 2          # 可选：只取前2个batch进行evaluate（None表示不限制）
+  limit_batches: None

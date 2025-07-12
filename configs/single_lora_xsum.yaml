@@ -1,0 +1,59 @@
+# single_lora_xsum.yaml
+# ========= 基本信息 =========
+task_name: xsum
+task_type: summarization
+num_labels: 1  # 文本生成任务通常不需要这个字段，但为了兼容结构保留
+
+# ========= 模型结构 =========
+backbone_model: facebook/bart-base  
+
+lora:
+  r: 8
+  alpha: 16
+  dropout: 0.1
+  target_modules: ["query", "value"]  
+
+# ========= 训练参数 =========
+train:
+  seed: 42
+  batch_size: 4        # 文本生成模型通常较大，batch 适当减小
+  learning_rate: 2e-5  # Text2Text 通常 < 3e-5
+  num_epochs: 3
+  # num_epochs: 1
+  max_source_length: 512
+  max_target_length: 64
+  optimizer: adamw
+  lr_scheduler: linear
+  warmup_ratio: 0.1
+
+  # ========= 早停策略（可选）=========
+
+early_stopping:
+  enabled: true
+  patience: 2
+  monitor: val_loss   # best model
+  mode: min          # val_loss是min，val_acc是max, val_f1是max
+
+# ========= 数据路径 =========
+data:
+  train_file: data/single_lora_data/xsum_train_07052025_1605.json
+  val_file: data/single_lora_data/xsum_validation_07052025_1605.json
+
+# ========= 输出路径 =========
+output:
+  save_dir: /content/drive/MyDrive/DynamoRouterCheckpoints/adapter_xsum
+  save_best_only: true
+  monitor_metric: val_loss  # 自动对齐 early_stopping
+  save_lora_adapter: true
+  save_task_head: false  # 通常没有分类头
+  log_dir: /content/drive/MyDrive/DynamoRouterLogs/adapter_xsum
+
+# ========= 调试专用 =========
+# 调试时EPOCH可改为: num_epochs: 1
+# 去COLAB训练时要把 skip_training: false, limit_batches: None 
+debug:
+  #skip_training: true       # 跳过训练主循环，只测试evaluate和保存流程
+  skip_training: false
+  skip_evaluation: false    # 不跳评估，让模型至少走一次评估流程
+  # limit_batches: 2          # 可选：只取前2个batch进行evaluate（None表示不限制）
+  limit_batches: None 

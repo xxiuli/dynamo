@@ -1,8 +1,33 @@
+# train_utils.py
+import os
 import numpy as np
 import torch
 import random
 from transformers.optimization import Adafactor
 from torch.optim import AdamW
+import yaml
+
+class EarlyStop:
+    def __init__(self, patience=3, mode='min'):
+        self.patience = patience
+        self.counter = 0
+        self.best_score = None
+        self.early_stop = False
+        self.mode = mode
+
+    def __call__(self, score):
+        if self.best_score is None:
+            self.best_score = score
+            print(f"[EarlyStop] Init best_score = {score:.4f}")
+        elif (self.mode =='min' and score >= self.best_score) or (self.mode == 'max' and score <= self.best_score):
+            self.counter += 1
+            print(f"[EarlyStop] No improvement (score={score:.4f}), counter={self.counter}/{self.patience}")
+            if self.counter >= self.patience:
+                self.early_stop = True
+        else:
+            print(f"[EarlyStop] Improved from {self.best_score:.4f} → {score:.4f}")
+            self.best_score = score
+            self.counter = 0
 
 def set_seed(seed):
     random.seed(seed)   # Python 随机性（如 shuffle）
@@ -31,4 +56,36 @@ def get_optimizer(name, params, lr):
         return Adafactor(params, scale_parameter=True, relative_step=True, warmup_init=True)
     else:
         raise ValueError(f"Unsupported optimizer: {name}")
+    
+#  2. save_model 工具函数（建议传 trainer 对象）
+def save_model(trainer, final=False, epoch=None):
+    try:
+        task_name = trainer.config['task_name']
+        path = os.path.join(
+            trainer.save_dir, 
+            f'adapter_{task_name}' if final else f'checkpoint_epoch{epoch}'
+        )
+        os.makedirs(path, exist_ok=True)
+
+        # 保存 config
+        with open(os.path.join(path, 'config.yaml'), 'w') as f:
+            yaml.dump(trainer.config, f)
+
+        # 保存 LoRA adapter
+        trainer.model.save_pretrained(path)
+
+        # 保存 tokenizer
+        trainer.tokenizer.save_pretrained(path)
+
+        # 保存 base model（只保存一次）
+        if final and hasattr(trainer.model, 'base_model'):
+            base_path = os.path.join(trainer.save_dir, 'base')
+            try:
+                trainer.model.base_model.save_pretrained(base_path)
+            except Exception as e:
+                print(f"[WARNING] Failed to save base model: {e}")
+
+        print(f"[INFO] Model saved to {path}")
+    except Exception as e:
+        print(f"[ERROR] Failed to save model: {e}")
     

@@ -1,5 +1,4 @@
-# config_single_lora.yaml
-
+# single_lora_squad.yaml
 # ========= 基本信息 =========
 task_name: sst2
 task_type: classification  # 可选: classification / nli / qa / summarization / ner
@@ -21,6 +20,7 @@ train:
   batch_size: 16
   learning_rate: 2e-4
   num_epochs: 5
+  # num_epochs: 1
   max_seq_length: 128
   optimizer: adamw            # 可选: adamw, sgd, adafactor...
   lr_scheduler: linear        # 可选: linear, cosine, step
@@ -30,7 +30,8 @@ train:
 early_stopping:
   enabled: true
   patience: 3
-  monitor: val_loss
+  monitor: val_acc    # best model
+  mode: max           # val_loss是min，val_acc是max, val_f1是max
 
 # ========= 路径 =========
 data:
@@ -38,8 +39,19 @@ data:
   val_file: data/single_lora_data/glue_sst2_validation_07052025_1527.json
 
 output:
-  save_dir: /content/drive/MyDrive/DynamoRouterCheckpoints/sst2
+  save_dir: /content/drive/MyDrive/DynamoRouterCheckpoints/adapter_sst2
   save_best_only: true
+  monitor_metric: val_acc  # 自动对齐 early_stopping
   save_lora_adapter: true
   save_task_head: true
-  log_dir: /content/drive/MyDrive/DynamoRouterLogs/sst2
+  log_dir: /content/drive/MyDrive/DynamoRouterLogs/adapter_sst2
+
+# ========= 调试专用 =========
+# 调试时EPOCH可改为: num_epochs: 1
+# 去COLAB训练时要把 skip_training: false, limit_batches: None 
+debug:
+  # skip_training: true       # 跳过训练主循环，只测试evaluate和保存流程
+  skip_training: false 
+  skip_evaluation: false    # 不跳评估，让模型至少走一次评估流程
+  # limit_batches: 2          # 可选：只取前2个batch进行evaluate（None表示不限制）
+  limit_batches: None
