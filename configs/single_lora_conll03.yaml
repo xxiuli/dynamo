@@ -30,17 +30,17 @@ early_stopping:
   mode: max          # val_loss是min，val_acc是max, val_f1是max
 
 data:
-  train_file: data/single_lora_data/conll2003_train_07052025_1605.json
-  val_file: data/single_lora_data/conll2003_validation_07052025_1605.json
-  label2id_file: data/label2id_for_conll03.json 
+  train_file: ${DATA_ROOT}/single_lora_data/conll2003_train_07052025_1605.json
+  val_file: ${DATA_ROOT}/single_lora_data/conll2003_validation_07052025_1605.json
+  label2id_file: ${DATA_ROOT}/label2id_for_conll03.json 
 
 output:
-  save_dir: /content/drive/MyDrive/DynamoRouterCheckpoints/adapter_conll03
+  save_dir: ${DRIVE_ROOT}/DynamoRouterCheckpoints/adapter_conll03
   save_best_only: true
   monitor_metric: val_f1  # 自动对齐 early_stopping
   save_lora_adapter: true
   save_task_head: true
-  log_dir: /content/drive/MyDrive/DynamoRouterLogs/adapter_conll03
+  log_dir: ${DRIVE_ROOT}/DynamoRouterLogs/adapter_conll03
 
 # ========= 调试专用 =========
 # 调试时EPOCH可改为: num_epochs: 1

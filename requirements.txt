@@ -1,10 +1,10 @@
 # Core libraries
-torch==2.7.1
+torch==2.6.0
 transformers==4.52.4
 datasets==3.6.0
 evaluate==0.4.0
-scikit-learn==1.7.0
-pandas==2.3.0
+scikit-learn==1.6.1
+pandas==2.2.2
 tqdm==4.67.1
 PyYAML==6.0.2
 
@@ -12,11 +12,11 @@ PyYAML==6.0.2
 peft==0.15.2
 
 # TensorBoard logging
-tensorboard==2.19.0
+tensorboard==2.18.0
 
 # For ROUGE score in summarization
 rouge_score==0.1.2
 
 # Optional: for some tokenizer edge cases
 sentencepiece==0.2.0
-protobuf==6.31.1
+protobuf==5.29.1
