@@ -1,4 +1,4 @@
-#temsorboard_utils.py
+#teNsorboard_utils.py
 from torch.utils.tensorboard import SummaryWriter
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 import matplotlib.pyplot as plt
@@ -14,6 +14,7 @@ def create_writer(log_dir):
     os.makedirs(final_log_dir, exist_ok=True)
     return SummaryWriter(final_log_dir)
 
+# tensor board
 def plot_confusion_matrix_to_tensorboard(preds, labels, class_names, writer, epoch, tag="ConfusionMatrix"):
     """
     将混淆矩阵绘图输出到 TensorBoard
@@ -43,3 +44,30 @@ def plot_confusion_matrix_to_tensorboard(preds, labels, class_names, writer, epo
     # 写入 TensorBoard
     writer.add_image(tag, image, global_step=epoch, dataformats='HWC')
     plt.close(fig)
+
+### ========= 图像保存专用（非TensorBoard） ========= ###
+def plot_metric_curve(metric_dict, title, ylabel, save_path):
+    epochs = list(metric_dict.keys())
+    values = list(metric_dict.values())
+    plt.figure(figsize=(6, 4))
+    plt.plot(epochs, values, marker='o')
+    plt.title(title)
+    plt.xlabel("Epoch")
+    plt.ylabel(ylabel)
+    plt.grid(True)
+    plt.tight_layout()
+    plt.savefig(save_path)
+    plt.close()
+    print(f"[Saved] {save_path}")
+
+def plot_ner_entity_f1(f1_dict, save_path):
+    plt.figure(figsize=(6, 4))
+    plt.bar(f1_dict.keys(), f1_dict.values(), color='skyblue')
+    plt.title("CoNLL-03 Entity-wise F1 Score")
+    plt.ylabel("F1 Score")
+    plt.ylim(0, 100)
+    plt.grid(axis='y')
+    plt.tight_layout()
+    plt.savefig(save_path)
+    plt.close()
+    print(f"[Saved] {save_path}")

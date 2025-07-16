@@ -1,8 +1,9 @@
-# trainers/trainer_cls_single.py  ->适用于 sst2, agnews
+# trainers/trainer_cls_single.py  ->适用于 sst2, agnews, mnli, qqp
 
 import torch
 from sklearn.metrics import accuracy_score, classification_report
 from trainers.base_trainer import BaseTrainer
+from utils.tensorboard_utils import plot_confusion_matrix_to_tensorboard
 
 class SingleClassificationTrainer(BaseTrainer):
     def __init__(self, model, config, device, tokenizer):
@@ -64,6 +65,18 @@ class SingleClassificationTrainer(BaseTrainer):
             print(f"[ERROR] Failed to compute metrics: {e}")
             report = "Report unavailable"
             acc = 0.0
+
+        # visualize 
+        try:
+            plot_confusion_matrix_to_tensorboard(
+                preds=all_preds,
+                label=labels,
+                class_name=self.class_names,
+                writer=self.writer,
+                epoch=epoch
+            )
+        except Exception as e:
+            print(f"[ERROR] Failed to plot confusion matrix in epoch: {epoch}: {e}")
 
         return {
             "val_loss": val_loss,

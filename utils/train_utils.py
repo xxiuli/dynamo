@@ -38,6 +38,7 @@ def set_seed(seed):
 def freeze_base_model(model):
     # Freeze all original model parameters
     for name, param in model.named_parameters():
+        # 只有插入的 LoRA 模块（通常名字中包含 lora_）和（可选的）任务分类头 classifier 会参与训练
         if 'lora_' not in name and 'classifier' not in name:
             param.requires_grad = False
 

@@ -4,7 +4,7 @@ task_type: ner
 num_labels: 9
 class_names: ['O', 'B-PER', 'I-PER', 'B-ORG', 'I-ORG', 'B-LOC', 'I-LOC', 'B-MISC', 'I-MISC']
 
-backbone_model: roberta-base
+backbone_model: dslim/bert-base-NER
 
 lora:
   r: 8
@@ -46,8 +46,8 @@ output:
 # 调试时EPOCH可改为: num_epochs: 1
 # 去COLAB训练时要把 skip_training: false, limit_batches: None 
 debug:
-  # skip_training: true       # 跳过训练主循环，只测试evaluate和保存流程
-  skip_training: false 
   skip_evaluation: false    # 不跳评估，让模型至少走一次评估流程
-  # limit_batches: 2          # 可选：只取前2个batch进行evaluate（None表示不限制）
+  skip_training: false 
   limit_batches: None
+  # skip_training: true       # 本地测试时用：跳过训练主循环，只测试evaluate和保存流程
+  # limit_batches: 2          # 本地测试时用：：只取前2个batch进行evaluate（None表示不限制）

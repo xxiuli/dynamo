@@ -1,4 +1,4 @@
-# dataset_summarization.py
+# trainer_summarization.py ->XSUM
 import torch
 from trainers.base_trainer import BaseTrainer
 from evaluate import load

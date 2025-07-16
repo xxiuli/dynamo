@@ -3,6 +3,7 @@ import torch
 from sklearn.metrics import classification_report
 from trainers.base_trainer import BaseTrainer
 from sklearn.metrics import f1_score
+from utils.tensorboard_utils import plot_confusion_matrix_to_tensorboard
 
 class TokenClassificationTrainer(BaseTrainer):
     def __init__(self, model, config, device, tokenizer):

@@ -5,13 +5,13 @@ task_type: summarization
 num_labels: 1  # 文本生成任务通常不需要这个字段，但为了兼容结构保留
 
 # ========= 模型结构 =========
-backbone_model: facebook/bart-base  
+backbone_model: google/pegasus-xsum
 
 lora:
   r: 8
   alpha: 16
   dropout: 0.1
-  target_modules: ["query", "value"]  
+  target_modules: ["q", "v"]  #'只在 Transformer 的 Query 和 Value 层 注入 LoRA 权重.'.用于指定 哪些模块（子层）将被应用 LoRA 权重注入。这决定了 LoRA 微调过程中，哪些部分的权重会被替换为低秩矩阵，以实现参数高效微调。
 
 # ========= 训练参数 =========
 train:
@@ -36,24 +36,24 @@ early_stopping:
 
 # ========= 数据路径 =========
 data:
-  train_file: data/single_lora_data/xsum_train_07052025_1605.json
-  val_file: data/single_lora_data/xsum_validation_07052025_1605.json
+  train_file: ${DATA_ROOT}/single_lora_data/xsum_train_07052025_1605.json
+  val_file: ${DATA_ROOT}/single_lora_data/xsum_validation_07052025_1605.json
 
 # ========= 输出路径 =========
 output:
-  save_dir: /content/drive/MyDrive/DynamoRouterCheckpoints/adapter_xsum
+  save_dir: ${DRIVE_ROOT}/DynamoRouterCheckpoints/adapter_xsum
   save_best_only: true
   monitor_metric: val_loss  # 自动对齐 early_stopping
   save_lora_adapter: true
   save_task_head: false  # 通常没有分类头
-  log_dir: /content/drive/MyDrive/DynamoRouterLogs/adapter_xsum
+  log_dir: ${DRIVE_ROOT}/DynamoRouterLogs/adapter_xsum
 
 # ========= 调试专用 =========
 # 调试时EPOCH可改为: num_epochs: 1
 # 去COLAB训练时要把 skip_training: false, limit_batches: None 
 debug:
-  #skip_training: true       # 跳过训练主循环，只测试evaluate和保存流程
-  skip_training: false
   skip_evaluation: false    # 不跳评估，让模型至少走一次评估流程
-  # limit_batches: 2          # 可选：只取前2个batch进行evaluate（None表示不限制）
-  limit_batches: None 
+  skip_training: false 
+  limit_batches: None
+  # skip_training: true       # 本地测试时用：跳过训练主循环，只测试evaluate和保存流程
+  # limit_batches: 2          # 本地测试时用：：只取前2个batch进行evaluate（None表示不限制）

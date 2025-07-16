@@ -15,6 +15,13 @@
       "console": "integratedTerminal"
     },
     {
+      "name": "check target models", //检查基座里的Q,V两个模块对应的模块名
+      "type": "python",
+      "request": "launch",
+      "program": "${workspaceFolder}/utils/check_target_modules.py",
+      "console": "integratedTerminal"
+    },
+    {
       "name": "Train LoRA - SST-2",
       "type": "python",
       "request": "launch",
@@ -98,6 +105,7 @@
         "TOKENIZERS_PARALLELISM": "false"
       }
     }
+
   ]
 }
 

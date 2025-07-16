@@ -1,128 +1,111 @@
+# 🚀 LoRA Fine-Tuning Platform for NLP Tasks
+
+This project provides a **config-driven, extensible training framework** for fine-tuning HuggingFace models with **LoRA adapters** on multiple NLP tasks, including classification, NER, QA, and summarization.
 
 ---
 
-# DynamoRouter: A Multi-Task LoRA Dynamic Routing Transformer System
+## 🧠 Supported Tasks
 
-🚀 **DynamoRouter** is a multi-task learning system built on **RoBERTa + LoRA adapters + dynamic task routing**.
-It supports **task-specific fine-tuning** with **parameter-efficient PEFT methods**, and performs **end-to-end dynamic routing across multiple NLP tasks**.
-
----
-
-## 🧱 Project Architecture Overview
-
-```
-[ Input Text ]
-      │
-[ Frozen RoBERTa Encoder ]
-      │
-[ Task Router (MLP) ]
-      │
-[ Selected LoRA Adapter ] → [ Task-Specific Output Head (Classification / QA / Summarization) ]
-      │
-[ Loss Calculation (Per Task) ]
-```
+| Task Type        | Examples     | Trainer Class               | Dataset Loader                   |
+|------------------|--------------|-----------------------------|----------------------------------|
+| Single Sentence Classification | SST2, AGNews | `SingleClassificationTrainer` | `dataset_cls_single.py` |
+| Sentence Pair Classification  | MNLI, QQP    | `SingleClassificationTrainer` | `dataset_cls_pair.py`  |
+| Named Entity Recognition (NER)| CoNLL-2003   | `TokenClassificationTrainer`  | `dataset_cls_token.py`  |
+| Question Answering (QA)       | SQuAD        | `QuestionAnsweringTrainer`    | `dataset_qa_span.py`    |
+| Summarization                 | XSum         | `SummarizationTrainer`        | `dataset_summarization.py` |
 
 ---
 
-## 🎯 Supported Tasks (Current Setup)
+## 📁 Project Structure
+dynamo/
+├── configs/
+│ ├── single_lora_sst2.yaml
+│ ├── single_lora_conll03.yaml
+│ └── ...
+├── data_loaders/
+├── trainers/
+├── utils/
+├── train_lora_cls.py
+├── train_lora_conll03.py
+├── train_lora_squad.py
+└── train_lora_xsum.py
 
-| Task  | Dataset                                                             | LoRA TaskType               |
-| ----- | ------------------------------------------------------------------- | --------------------------- |
-| SST-2 | Sentiment Classification                                            | SEQ\_CLS                    |
-| SQuAD | Question Answering (Span Prediction)                                | QUESTION\_ANS               |
-| XSum  | Summarization / Binary Classification (depending on implementation) | SEQ\_CLS or SEQ\_2\_SEQ\_LM |
-
-> ✅ Easily extendable for more tasks!
-
----
-
-## ✅ Features
-
-* ✅ **Multi-Task Learning (MTL)**
-* ✅ **Task-Specific LoRA Adapters**
-* ✅ **Dynamic Task Router (MLP-based)**
-* ✅ **Multi-Head End-to-End Training**
-* ✅ **Multi-Loss Support**
-* ✅ **Config-Driven Training Pipelines**
-* ✅ **Google Colab + Drive Integration**
-* ✅ **PEFT (Parameter-Efficient Fine-Tuning)**
 
 ---
 
-## 📂 Project Structure
-
-```
-DynamoRouter/
-├── configs/                  # LoRA and training hyperparameter configs
-│     ├── lora_sst2.json
-│     ├── lora_squad.json
-│     └── lora_xsum.json
-├── data/
-│     └── raw/                 # Raw datasets (JSONL or JSON format)
-├── lora_checkpoints/          # Saved adapter weights
-├── router_checkpoints/        # Saved Router MLP weights
-├── end2end_checkpoints/       # Full End-to-End training checkpoints
-├── train_lora.py              # Single-task LoRA trainer (config-driven)
-├── train_router.py            # Router trainer
-├── train_end2end.py           # Multi-head End-to-End trainer
-└── README.md
-```
-
----
-
-## ⚙️ Training Workflow
-
-| Phase                              | Script             | Description                                      |
-| ---------------------------------- | ------------------ | ------------------------------------------------ |
-| 1️⃣ Single-task LoRA fine-tuning   | `train_lora.py`    | Fine-tune one adapter per task                   |
-| 2️⃣ Router Training                | `train_router.py`  | Train MLP router on mixed task data              |
-| 3️⃣ End-to-End Multi-Task Training | `train_end2end.py` | Joint training of router + adapters (multi-head) |
-
----
-
-## 📌 Example Usage (Colab)
-
-### Mount Google Drive:
-
-```python
-from google.colab import drive
-drive.mount('/content/drive')
-```
-
-### Train SST2 LoRA Adapter:
+## 🔧 How to Run
 
 ```bash
-python train_lora.py --config_path ./configs/lora_sst2.json
-```
+# For single sentence classification (e.g., SST2 or AGNews)
+python train_lora_cls.py --config configs/single_lora_sst2.yaml
 
-### Train Router:
+# For pair classification (e.g., MNLI or QQP)
+python train_lora_cls.py --config configs/single_lora_mnli.yaml
 
-```bash
-python train_router.py
-```
+# For NER
+python train_lora_conll03.py --config configs/single_lora_conll03.yaml
 
-### End-to-End Training:
+# For QA
+python train_lora_squad.py --config configs/single_lora_squad.yaml
 
-```bash
-python train_end2end.py
-```
+# For summarization
+python train_lora_xsum.py --config configs/single_lora_xsum.yaml
 
----
+✅ If running in Google Colab, the script will auto-detect and mock sys.argv for convenience.
 
-## 📝 Possible Improvements (Future Work)
+📦 Sample Config
+task_name: sst2
+backbone_model: bert-base-uncased
 
-* ✅ AdapterFusion / AdapterDrop support
-* ✅ Weighted multi-task loss
-* ✅ Optuna / W\&B hyperparameter search
-* ✅ Model Export for production inference
-* ✅ Docker deployment / API serving
+data:
+  train_file: ${DATA_ROOT}/sst2_train.json
+  val_file: ${DATA_ROOT}/sst2_val.json
 
----
+train:
+  batch_size: 32
+  max_seq_length: 128
+  num_epochs: 3
+  seed: 42
+  log_dir: ${DRIVE_ROOT}/runs/sst2
 
-## 🧑‍💻 Author
+lora:
+  r: 8
+  alpha: 32
+  dropout: 0.1
+  target_modules: ["query", "value"]
 
-**Xiuxiu Li**
-*ML Engineer / Full-Stack Developer / MLOps Learner*
+💡 ${DATA_ROOT} and ${DRIVE_ROOT} will be replaced via apply_path_placeholders() at runtime.
 
----
+🧰 Features
+✅ LoRA fine-tuning via peft with config-based adapter injection
+
+✅ Automatic dataset class routing via task_map.py
+
+✅ Modular trainer classes per task
+
+✅ TensorBoard logging enabled for each run
+
+✅ CLI or programmatic launch supported
+
+✅ Robust error handling and structured config loading
+
+📊 TensorBoard
+After training finishes:
+tensorboard --logdir=your_log_dir
+# Then visit http://localhost:6006
+
+📦 Requirements
+pip install torch transformers peft pyyaml tensorboard
+
+
+✅ TODO (WIP)
+ Config-driven data and model loading
+
+ Support multiple tasks with dynamic routing
+
+ Add evaluation and inference pipeline
+
+ Add Optuna or W&B integration for tuning
+
+
 
