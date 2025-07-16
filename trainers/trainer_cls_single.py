@@ -37,6 +37,9 @@ class SingleClassificationTrainer(BaseTrainer):
                     if limit_batches is not None and i >= limit_batches:
                         break
 
+                    print(f"[DEBUG] Batch {i} raw labels: {batch['labels'][:5]}")
+                    print(f"[DEBUG] Dtype: {batch['labels'].dtype}, shape: {batch['labels'].shape}, type: {type(batch['labels'])}")
+
                     batch = {k: v.to(self.device) for k, v in batch.items()}
                     outputs = self.model(**batch)
                     loss = outputs.loss

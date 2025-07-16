@@ -21,7 +21,10 @@ from utils.task_map import get_task_info
 def load_tokenizer_and_model(config):
     tokenizer = AutoTokenizer.from_pretrained(config['backbone_model'])
     base_model = AutoModelForSequenceClassification.from_pretrained(
-        config['backbone_model'], num_labels=config['num_labels'])
+        config['backbone_model'], 
+        num_labels=config['num_labels']，
+        ignore_mismatched_sizes=True
+        )
     return tokenizer, base_model
 
 def load_dataset(config, tokenizer):
@@ -48,10 +51,10 @@ def load_dataset(config, tokenizer):
     return train_dataset, val_dataset
 
 def main(config_path):
-    print(f"\n🚀 Training task: {config['task_name']} started.")
-
     config = load_config(config_path)
     config = apply_path_placeholders(config)
+
+    print(f"\n🚀 Training task: {config['task_name']} started.")
 
     set_seed(config['train']['seed'])
 

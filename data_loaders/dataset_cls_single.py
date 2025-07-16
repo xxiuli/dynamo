@@ -15,7 +15,7 @@ class SingleTextClassificationDataset(Dataset):
                 item = json.loads(line)
                 self.samples.append({
                     'text': item['text'] if 'text' in item else item['sentence'],
-                    'label': item['label']
+                    'label': int(item['label'])
                 })
 
         if not self.samples:
@@ -34,8 +34,13 @@ class SingleTextClassificationDataset(Dataset):
             return_tensors='pt'
         )
 
+        try:
+            label = int(item['label'])  # 保证是 int (需要计算LOSS的时候不是字符串)
+        except ValueError:
+            raise ValueError(f"Invalid label: {item['label']} (type: {type(item['label'])})")
+
         return {
             'input_ids': encoding['input_ids'].squeeze(0),
             'attention_mask': encoding['attention_mask'].squeeze(0),
-            'labels': torch.tensor(item['label'], dtype=torch.long)
+            'labels': torch.tensor(label, dtype=torch.long)
         }

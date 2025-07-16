@@ -45,6 +45,7 @@ def load_datasets(config, tokenizer):
 def main(config_path):
     config = load_config(config_path)
     config = apply_path_placeholders(config)
+    print(f"\n🚀 Training task: {config['task_name']} started.")
 
     set_seed(config['train']['seed'])
 
