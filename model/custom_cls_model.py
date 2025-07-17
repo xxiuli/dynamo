@@ -16,9 +16,13 @@ class CustomClassificationModel(nn.Module):
         self.head = ClassificationHead(hidden_size, num_labels)
 
     # 模型整体的 forward , 把数据FORWARD向HEAD
-    def forward(self, input_ids, attention_mask=None, labels=None): 
+    def forward(self, input_ids, attention_mask=None, labels=None, inputs_embeds=None): 
         # Step 1: 输入进入 RoBERTa（或 BERT）
-        outputs = self.backbone(input_ids=input_ids, attention_mask=attention_mask) # → Roberta
+        outputs = self.backbone(
+            input_ids=input_ids, 
+            attention_mask=attention_mask,
+            inputs_embeds=inputs_embeds  # ✅ 添加这行，转发给 backbone
+            ) # → Roberta
 
         # Step 2: 拿到 [CLS] token 向量（第一个位置）
         cls_output = outputs.last_hidden_state[:, 0] 
