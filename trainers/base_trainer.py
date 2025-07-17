@@ -3,7 +3,7 @@ import os
 from transformers import get_scheduler
 from utils.tensorboard_utils import create_writer
 from utils.train_utils import get_optimizer,EarlyStop, save_model
-from tqdm import tqdm
+from tqdm.auto import tqdm
 from abc import ABC, abstractmethod  # 如果要强制继承类实现 evaluate
 
 class BaseTrainer(ABC):
@@ -84,7 +84,7 @@ class BaseTrainer(ABC):
         for epoch in range(num_epochs):
             self.model.train()
             total_loss = 0
-            for step, batch in enumerate(tqdm(train_loader, desc=f'Epoch {epoch+1}')):
+            for step, batch in enumerate(tqdm(train_loader, desc=f'Epoch {epoch+1}', dynamic_ncols=True)):
                 batch = {k :v.to(self.device) for k, v in batch.items()}
                 
                 # 否则

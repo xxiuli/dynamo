@@ -18,6 +18,7 @@ from trainers.trainer_cls_single import SingleClassificationTrainer
 from utils.setting_utils import parse_args, load_config, apply_path_placeholders
 from utils.train_utils import set_seed, print_trainable_params, freeze_base_model
 from utils.task_map import get_task_info
+from transformers import default_data_collator
 
 def load_tokenizer_and_model(config):
     tokenizer = AutoTokenizer.from_pretrained(config['backbone_model'])
@@ -84,7 +85,12 @@ def main(config_path):
     # Step 3. 准备数据集与 DataLoader
     train_dataset, val_dataset = load_dataset(config, tokenizer)
     train_loader = DataLoader(train_dataset, batch_size=config['train']['batch_size'], shuffle=True)
-    val_loader = DataLoader(val_dataset, batch_size=config['train']['batch_size'])
+    val_loader = DataLoader(
+        val_dataset, 
+        batch_size=config['train']['batch_size'],
+        shuffle=False,
+        collate_fn=default_data_collator
+        )
 
     config['train']['steps_per_epoch'] = len(train_loader)
 

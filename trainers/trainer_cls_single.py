@@ -40,6 +40,11 @@ class SingleClassificationTrainer(BaseTrainer):
                     print(f"[DEBUG] Batch {i} raw labels: {batch['labels'][:5]}")
                     print(f"[DEBUG] Dtype: {batch['labels'].dtype}, shape: {batch['labels'].shape}, type: {type(batch['labels'])}")
 
+                    if not isinstance(batch['labels'], torch.Tensor):
+                        batch['labels'] = torch.tensor(batch['labels'], dtype=torch.long)
+                    else:
+                        batch['labels'] = batch['labels'].to(torch.long)
+
                     batch = {k: v.to(self.device) for k, v in batch.items()}
                     outputs = self.model(**batch)
                     loss = outputs.loss
@@ -47,6 +52,8 @@ class SingleClassificationTrainer(BaseTrainer):
 
                     predictions = torch.argmax(outputs.logits, dim=-1)
                     labels = batch['labels']
+
+
                     all_preds.extend(predictions.cpu().numpy())
                     all_labels.extend(labels.cpu().numpy())
                 except Exception as e:
