@@ -3,9 +3,13 @@ from heads.classification_head import ClassificationHead
 import torch.nn as nn
 
 class CustomClassificationModel(nn.Module):
-    def __init__(self, backbone_name, num_labels):
+    def __init__(self, backbone_name, num_labels, ignore_mismatched_sizes=False):
         super().__init__()
-        self.backbone = AutoModel.from_pretrained(backbone_name)
+        self.backbone = AutoModel.from_pretrained(
+            backbone_name,
+            ignore_mismatched_sizes=ignore_mismatched_sizes
+            )
+        
         hidden_size = self.backbone.config.hidden_size #从预训练模型 config 中读取输出维度
         # 要确保 RoBERTa 的 hidden size 和 Head 的输入维度一样, 最关键的接口一致性原则
         self.head = ClassificationHead(hidden_size, num_labels)
