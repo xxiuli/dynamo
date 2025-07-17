@@ -1,6 +1,7 @@
 from transformers import AutoModel
 from heads.classification_head import ClassificationHead
 import torch.nn as nn
+from transformers.modeling_outputs import SequenceClassifierOutput
 
 class CustomClassificationModel(nn.Module):
     def __init__(self, backbone_name, num_labels, ignore_mismatched_sizes=False):
@@ -22,7 +23,8 @@ class CustomClassificationModel(nn.Module):
             input_ids=input_ids, 
             attention_mask=attention_mask,
             inputs_embeds=inputs_embeds,  # ✅ 添加这行，转发给 backbone
-            **kwargs
+            **kwargs,
+            return_dict=True
             ) # → Roberta
 
         # Step 2: 拿到 [CLS] token 向量（第一个位置）
@@ -39,6 +41,10 @@ class CustomClassificationModel(nn.Module):
             # 经SOFTMAX 归一化
             loss_fn = nn.CrossEntropyLoss()
             loss = loss_fn(logits, labels)
-            return {"logits": logits, "loss": loss}
-        else:
-            return {"logits": logits}
+        
+        return SequenceClassifierOutput(
+            loss=loss,
+            logits=logits,
+            hidden_states=outputs.hidden_states,
+            attentions=outputs.attentions
+        )

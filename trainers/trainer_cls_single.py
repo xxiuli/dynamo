@@ -36,7 +36,7 @@ class SingleClassificationTrainer(BaseTrainer):
             for i, batch in enumerate(val_loader):
                 try:
                     # 如果本地调试，limit_batches=2， 那么就跑2个EPOACH就停了
-                    # if limit_batches is not None and i >= limit_batches:
+                    # if limit_batches is not Null and i >= limit_batches:
                     #     break
 
                     print(f"[DEBUG] Batch {i} raw labels: {batch['labels'][:5]}")
