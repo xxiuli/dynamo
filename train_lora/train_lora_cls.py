@@ -95,13 +95,14 @@ def main(config_path):
         train_dataset, 
         batch_size=config['train']['batch_size'], 
         shuffle=True,
-        collate_fn=default_data_collator)
+        collate_fn=custom_collate_fn
+        )
 
     val_loader = DataLoader(
         val_dataset, 
         batch_size=config['train']['batch_size'],
         shuffle=False,
-        collate_fn=default_data_collator
+        collate_fn=custom_collate_fn
         )
 
     config['train']['steps_per_epoch'] = len(train_loader)
