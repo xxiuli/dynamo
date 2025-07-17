@@ -15,7 +15,7 @@ class SingleClassificationTrainer(BaseTrainer):
 
     def evaluate(self, val_loader, epoch):
         print(f"[DEBUG][evaluate()] called at epoch {epoch}")
-        
+
         debug_config = self.config.get("debug", {})
         skip_evaluation = debug_config.get("skip_evaluation", False)
         limit_batches = debug_config.get("limit_batches", None)
@@ -36,8 +36,8 @@ class SingleClassificationTrainer(BaseTrainer):
             for i, batch in enumerate(val_loader):
                 try:
                     # 如果本地调试，limit_batches=2， 那么就跑2个EPOACH就停了
-                    if limit_batches is not None and i >= limit_batches:
-                        break
+                    # if limit_batches is not None and i >= limit_batches:
+                    #     break
 
                     print(f"[DEBUG] Batch {i} raw labels: {batch['labels'][:5]}")
                     print(f"[DEBUG] Dtype: {batch['labels'].dtype}, shape: {batch['labels'].shape}, type: {type(batch['labels'])}")
