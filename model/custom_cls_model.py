@@ -23,8 +23,7 @@ class CustomClassificationModel(nn.Module):
             input_ids=input_ids, 
             attention_mask=attention_mask,
             inputs_embeds=inputs_embeds,  # ✅ 添加这行，转发给 backbone
-            **kwargs,
-            return_dict=True
+            **kwargs
             ) # → Roberta
 
         # Step 2: 拿到 [CLS] token 向量（第一个位置）
