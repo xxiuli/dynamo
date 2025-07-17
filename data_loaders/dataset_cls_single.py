@@ -33,11 +33,18 @@ class SingleTextClassificationDataset(Dataset):
             max_length=self.max_seq_len,
             return_tensors='pt'
         )
-
+        
+        raw_label = item['label']
         try:
-            label = int(item['label'])  # 保证是 int (需要计算LOSS的时候不是字符串)
+            label = int(raw_label)  # 保证是 int (需要计算LOSS的时候不是字符串)
         except ValueError:
             raise ValueError(f"Invalid label: {item['label']} (type: {type(item['label'])})")
+        
+        label_tensor = torch.tensor(label, dtype=torch.long)
+        
+         # 🔍 打印调试信息
+        print(f"[DEBUG] Sample idx={idx}, raw_label={raw_label}, raw_type={type(raw_label)}")
+        print(f"[DEBUG] label_tensor={label_tensor}, tensor_dtype={label_tensor.dtype}, tensor_type={type(label_tensor)}")
 
         return {
             'input_ids': encoding['input_ids'].squeeze(0),
