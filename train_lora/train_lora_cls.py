@@ -31,6 +31,13 @@ def load_tokenizer_and_model(config):
         )
     return tokenizer, base_model
 
+def custom_collate_fn(batch):
+    return {
+        'input_ids': torch.stack([item['input_ids'] for item in batch]),
+        'attention_mask': torch.stack([item['attention_mask'] for item in batch]),
+        'labels': torch.tensor([item['labels'] for item in batch], dtype=torch.long)  # ✅ 生成1D tensor
+    }
+
 def load_dataset(config, tokenizer):
     task_name = config['task_name'].lower()
     task_info = get_task_info(task_name)

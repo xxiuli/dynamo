@@ -34,11 +34,11 @@ class SingleTextClassificationDataset(Dataset):
             return_tensors='pt'
         )
         
-        raw_label = item['label']
-        try:
-            label = int(raw_label)  # 保证是 int (需要计算LOSS的时候不是字符串)
-        except ValueError:
-            raise ValueError(f"Invalid label: {item['label']} (type: {type(item['label'])})")
+        # raw_label = item['label']
+        # try:
+        #     label = int(raw_label)  # 保证是 int (需要计算LOSS的时候不是字符串)
+        # except ValueError:
+        #     raise ValueError(f"Invalid label: {item['label']} (type: {type(item['label'])})")
         
          # 🔍 打印调试信息
         # label_tensor = torch.tensor(label, dtype=torch.long)
@@ -48,5 +48,5 @@ class SingleTextClassificationDataset(Dataset):
         return {
             'input_ids': encoding['input_ids'].squeeze(0),
             'attention_mask': encoding['attention_mask'].squeeze(0),
-            'labels': torch.tensor([label], dtype=torch.long)  # ⚠️ Wrap label in list to make it rank-1 tensor
+            'labels': item['label']  
         }
