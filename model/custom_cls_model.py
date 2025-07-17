@@ -9,6 +9,7 @@ class CustomClassificationModel(nn.Module):
             backbone_name,
             ignore_mismatched_sizes=ignore_mismatched_sizes
             )
+        self.config = self.backbone.config #LoRA 的时候，PeftModel 体系会尝试访问 .config.use_return_dict
         
         hidden_size = self.backbone.config.hidden_size #从预训练模型 config 中读取输出维度
         # 要确保 RoBERTa 的 hidden size 和 Head 的输入维度一样, 最关键的接口一致性原则
