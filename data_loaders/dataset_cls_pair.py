@@ -21,7 +21,7 @@ class PairTextClassificationDataset(Dataset):
                     text2 = item['question2']
                 else:
                     raise ValueError("Invalid sample format: missing expected pair fields")
-                label = item['label']
+                label = int(item['label'])
                 self.samples.append((text1, text2, label))
 
     def __len__(self):
@@ -37,6 +37,11 @@ class PairTextClassificationDataset(Dataset):
             max_length=self.max_seq_len,
             return_tensors='pt'
         )
+
+        try:
+            label = int(label)  # 保证是 int (需要计算LOSS的时候不是字符串)
+        except ValueError:
+            raise ValueError(f"Invalid label: {label} (type: {type(label)})")
 
         return {
             'input_ids': encoding['input_ids'].squeeze(0),

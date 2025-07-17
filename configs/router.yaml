@@ -1,0 +1,45 @@
+# ========= Router 分类任务配置 =========
+task_type: classification
+num_labels: 7
+task_names: ['sst2', 'mnli', 'qqp', 'squad', 'conll03', 'xsum', 'agnews']
+
+# ========= 模型结构 =========
+backbone: roberta-base  # 可选你喜欢的主干，如 roberta-base / distilroberta 等
+
+router:
+  temperature: 1.0
+
+# ========= 训练参数 =========
+training:
+  seed: 42
+  batch_size: 16
+  learning_rate: 5e-5
+  epochs: 5
+  max_seq_length: 128
+  optimizer: adamw
+  lr_scheduler: linear
+  warmup_ratio: 0.1
+
+# ========= 早停策略 =========
+early_stopping:
+  enabled: true
+  patience: 3
+  monitor: val_acc
+  mode: max
+
+data:
+  train_file: ${DATA_ROOT}/router_data/router_train.json
+  val_file: ${DATA_ROOT}/router_data/router_val.json
+
+# ========= 输出配置 =========
+output:
+  save_dir: ${DRIVE_ROOT}/DynamoRouterCheckpoints/router
+  log_dir: ${DRIVE_ROOT}/DynamoRouterLogs/router
+  save_best_only: true
+  monitor_metric: val_acc
+  save_router_model: true   # 自定义字段，保存 router.pth
+
+# ========= 调试参数（可选） =========
+debug:
+  skip_training: false
+  limit_batches: None
