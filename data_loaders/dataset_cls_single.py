@@ -40,14 +40,13 @@ class SingleTextClassificationDataset(Dataset):
         except ValueError:
             raise ValueError(f"Invalid label: {item['label']} (type: {type(item['label'])})")
         
-        label_tensor = torch.tensor(label, dtype=torch.long)
-        
          # 🔍 打印调试信息
-        print(f"[DEBUG] Sample idx={idx}, raw_label={raw_label}, raw_type={type(raw_label)}")
-        print(f"[DEBUG] label_tensor={label_tensor}, tensor_dtype={label_tensor.dtype}, tensor_type={type(label_tensor)}")
+        # label_tensor = torch.tensor(label, dtype=torch.long)
+        # print(f"[DEBUG] Sample idx={idx}, raw_label={raw_label}, raw_type={type(raw_label)}")
+        # print(f"[DEBUG] label_tensor={label_tensor}, tensor_dtype={label_tensor.dtype}, tensor_type={type(label_tensor)}")
 
         return {
             'input_ids': encoding['input_ids'].squeeze(0),
             'attention_mask': encoding['attention_mask'].squeeze(0),
-            'labels': torch.tensor(label, dtype=torch.long)
+            'labels': torch.tensor([label], dtype=torch.long)  # ⚠️ Wrap label in list to make it rank-1 tensor
         }
