@@ -11,6 +11,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import torch
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
+from model.custom_cls_model import CustomClassificationModel
 from torch.utils.data import DataLoader
 from peft import get_peft_model, LoraConfig, TaskType
 from trainers.trainer_cls_single import SingleClassificationTrainer
@@ -20,9 +21,11 @@ from utils.task_map import get_task_info
 
 def load_tokenizer_and_model(config):
     tokenizer = AutoTokenizer.from_pretrained(config['backbone_model'])
-    base_model = AutoModelForSequenceClassification.from_pretrained(
+
+    # CustomClassificationModel 是： Roberta基础模型+HEAD(nn层)的打包
+    base_model = CustomClassificationModel(
         config['backbone_model'], 
-        num_labels=config['num_labels']，
+        num_labels=config['num_labels'],
         ignore_mismatched_sizes=True
         )
     return tokenizer, base_model
@@ -85,8 +88,10 @@ def main(config_path):
 
     config['train']['steps_per_epoch'] = len(train_loader)
 
-    # Step 4. 进行训练
+    # Step 4. ROBERTA+HEAD这个基座模型，继续打包成SingleClassificationTrainer-里面有train(),evaluate()
     trainer = SingleClassificationTrainer(model, config, device, tokenizer)
+
+    # Step 4. 进行训练
     trainer.train(train_loader, val_loader)
 
     print("\n🚀 TensorBoard started! Run this command to view logs:\n")
