@@ -84,7 +84,12 @@ def main(config_path):
 
     # Step 3. 准备数据集与 DataLoader
     train_dataset, val_dataset = load_dataset(config, tokenizer)
-    train_loader = DataLoader(train_dataset, batch_size=config['train']['batch_size'], shuffle=True)
+    train_loader = DataLoader(
+        train_dataset, 
+        batch_size=config['train']['batch_size'], 
+        shuffle=True,
+        collate_fn=default_data_collator)
+
     val_loader = DataLoader(
         val_dataset, 
         batch_size=config['train']['batch_size'],

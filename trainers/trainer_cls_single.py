@@ -14,6 +14,8 @@ class SingleClassificationTrainer(BaseTrainer):
         return outputs, outputs["loss"]
 
     def evaluate(self, val_loader, epoch):
+        print(f"[DEBUG][evaluate()] called at epoch {epoch}")
+        
         debug_config = self.config.get("debug", {})
         skip_evaluation = debug_config.get("skip_evaluation", False)
         limit_batches = debug_config.get("limit_batches", None)
