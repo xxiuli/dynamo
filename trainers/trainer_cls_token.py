@@ -68,10 +68,6 @@ class TokenClassificationTrainer(BaseTrainer):
                         predictions = torch.argmax(outputs.logits, dim=-1)
                         labels = batch['labels']
 
-                        for p, l in zip(predictions, labels):
-                            if l != -100:
-                              print(f"[DEBUG] pred={p}, label={l}")
-
                         for pred, label in zip(predictions, labels):
                             pred = pred.cpu().numpy().tolist()
                             label = label.cpu().numpy().tolist()
