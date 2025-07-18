@@ -17,10 +17,15 @@ from trainers.trainer_qa import QuestionAnsweringTrainer
 from utils.setting_utils import parse_args, load_config, apply_path_placeholders
 from utils.train_utils import set_seed, print_trainable_params, freeze_base_model
 from utils.task_map import get_task_info
+from model.custom_cls_model import CustomClassificationModel
 
 def load_tokenizer_and_model(config):
     tokenizer = AutoTokenizer.from_pretrained(config['backbone_model'])
-    base_model = AutoModelForQuestionAnswering.from_pretrained(config['backbone_model'])
+    base_model = CustomClassificationModel(
+        config['backbone_model'], 
+        num_labels=config['num_labels'],
+        ignore_mismatched_sizes=True
+        )
     return tokenizer, base_model
 
 def load_datasets(config, tokenizer):
