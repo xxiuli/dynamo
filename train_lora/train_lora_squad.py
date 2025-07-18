@@ -10,7 +10,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import torch
 from torch.utils.data import DataLoader
-from transformers import AutoTokenizer, AutoModelForQuestionAnswering
+from transformers import AutoTokenizer
 from peft import get_peft_model, LoraConfig, TaskType
 
 from trainers.trainer_qa import QuestionAnsweringTrainer
