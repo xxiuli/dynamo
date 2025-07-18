@@ -39,7 +39,7 @@ class TokenClassificationDataset(Dataset):
             if word_idx is None:
                 continue
             if word_idx < len(labels):
-                labels_aligned[i] = self.label2id[labels[word_idx]]
+                labels_aligned[i] = labels[word_idx] 
 
         return {
             'input_ids': encoding['input_ids'].squeeze(0),
