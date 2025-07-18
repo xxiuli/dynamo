@@ -6,7 +6,7 @@ import json
 import torch
 from torch.utils.data import Dataset
 
-class PairedTextClassificationDataset(Dataset):
+class PairTextClassificationDataset(Dataset):
     def __init__(self, file_path, tokenizer, max_seq_len):
         self.samples = []
         self.tokenizer = tokenizer
