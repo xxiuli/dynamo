@@ -93,7 +93,6 @@ class TokenClassificationTrainer(BaseTrainer):
                     all_labels, 
                     all_preds,
                     labels=label_ids,
-                    labels=sorted(self.id2label.keys()),  # ✅ 显式告诉它有哪些类
                     target_names=[self.id2label[i] for i in label_ids],
                     digits=4,
                     zero_division=0
