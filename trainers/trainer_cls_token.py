@@ -88,15 +88,18 @@ class TokenClassificationTrainer(BaseTrainer):
             val_loss = total_loss / max(1, len(val_loader)) # 防止被0除
 
             try: 
+                label_ids = sorted(self.id2label.keys())
                 report = classification_report(
                     all_labels, 
                     all_preds,
+                    labels=label_ids,
                     labels=sorted(self.id2label.keys()),  # ✅ 显式告诉它有哪些类
-                    target_names=[self.id2label[i] for i in sorted(self.id2label.keys())],
-                    digits=4
+                    target_names=[self.id2label[i] for i in label_ids],
+                    digits=4,
+                    zero_division=0
                 )
 
-                macro_f1 = f1_score(all_labels, all_preds, average='macro')
+                macro_f1 = f1_score(all_labels, all_preds, labels=label_ids, average='macro', zero_division=0)
 
                 self.writer.add_scalar("F1/Macro", macro_f1, epoch)
                 self.writer.add_text("Classification Report", report, epoch)
