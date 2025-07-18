@@ -52,8 +52,12 @@ class TokenClassificationTrainer(BaseTrainer):
                             batch['labels'] = batch['labels'].to(torch.long)
 
                         batch = {k: v.to(self.device) for k, v in batch.items()}
+                        print(f"[DEBUG] Epoch {epoch}, Batch {i}, Labels: {batch['labels']}")
+
                         outputs = self.model(**batch)
                         loss = outputs.loss
+                        print(f"[DEBUG] Epoch {epoch}, Batch {i}, Loss: {loss.item()}")
+
                         total_loss += loss.item()
 
                         predictions = torch.argmax(outputs.logits, dim=-1)
