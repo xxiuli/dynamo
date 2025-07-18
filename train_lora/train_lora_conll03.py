@@ -33,10 +33,14 @@ def load_tokenizer_and_model(config, label2id):
     
     model = CustomClassificationModel(
         config['backbone_model'],
-        num_labels=len(label2id),
-        label2id=label2id,
-        id2label=id2label
+        num_labels=len(label2id)
     )
+
+    # 将 label2id 和 id2label 注入 config，不作为参数传入 __init__
+    model.config.label2id = label2id
+    model.config.id2label = id2label
+    model.config.num_labels = len(label2id)
+    
     return tokenizer, model
 
 def load_datasets(config, tokenizer, label2id):
