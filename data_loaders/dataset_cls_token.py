@@ -35,11 +35,23 @@ class TokenClassificationDataset(Dataset):
 
         labels_aligned = [-100] * self.max_length
         word_ids = encoding.word_ids(batch_index=0)
+        print(word_ids)
+
         for i, word_idx in enumerate(word_ids):
-            if word_idx is None and word_idx < len(labels):
-                continue
-            if word_idx < len(labels):
-                labels_aligned[i] = labels[word_idx] 
+            if word_idx is None:
+                labels_aligned[i] = -100
+            elif isinstance(word_idx, int):
+                if word_idx < len(labels):
+                    label_str = labels[word_idx]
+                    label_id = self.label2id.get(label_str, self.label2id.get("O", 0))
+                    labels_aligned[i] = label_id
+                    print(f"[DEBUG] token_idx={i}, word_idx={word_idx}, label_str={label_str}, label_id={label_id}")
+                else:
+                    labels_aligned[i] = -100
+                    print(f"[WARNING] word_idx={word_idx} out of bounds for label list of length {len(labels)}")
+            else:
+                labels_aligned[i] = -100
+                print(f"[WARNING] Unexpected word_idx type: {word_idx} ({type(word_idx)})")
 
         return {
             'input_ids': encoding['input_ids'].squeeze(0),
