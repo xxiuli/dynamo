@@ -31,19 +31,19 @@ class CustomClassificationModel(nn.Module):
             ) # → Roberta
 
         # Step 2: 拿到 [CLS] token 向量（第一个位置）
-        cls_output = outputs.last_hidden_state[:, 0] 
+        sequence_output = outputs.last_hidden_state           # [batch_size, seq_len, hidden_size] 
 
         # Step 3: 输入到分类头（Head 会自动调用它的 forward）
         # logits = 模型输出的每个类别的原始分数（未归一化）
-        logits = self.head(cls_output)      
+        logits = self.classifier(sequence_output)             # [batch_size, seq_len, num_labels]     
 
         loss = None
 
         # Step 4: 如果有标签，计算损失
         if labels is not None:
+            loss_fn = nn.CrossEntropyLoss(ignore_index=-100) #需要展平
             # 经SOFTMAX 归一化
-            loss_fn = nn.CrossEntropyLoss()
-            loss = loss_fn(logits, labels)
+            loss = loss_fn(logits.view(-1, logits.size(-1)), labels.view(-1))
         
         return SequenceClassifierOutput(
             loss=loss,
