@@ -9,7 +9,7 @@ class SummarizationTrainer(BaseTrainer):
 
     def _forward_step(self, batch):
         outputs = self.model(**batch)
-        return outputs, outputs.loss
+        return outputs, outputs["loss"]
 
     def evaluate(self, val_loader, epoch):
         debug_config = self.config.get("debug", {})

@@ -37,7 +37,9 @@ class QuestionAnsweringTrainer(BaseTrainer):
                     try:
                         batch = {k: v.to(self.device) for k, v in batch.items()}
                         # print(f"[DEBUG] Epoch {epoch}, Batch {i}, Labels: {batch['labels']}")
-
+                        print(f"[DEBUG] start_positions: {batch['start_positions'].min()} ~ {batch['start_positions'].max()}")
+                        print(f"[DEBUG] end_positions: {batch['end_positions'].min()} ~ {batch['end_positions'].max()}")
+                        
                         outputs = self.model(
                             input_ids=batch["input_ids"],
                             attention_mask=batch["attention_mask"],
@@ -76,7 +78,12 @@ class QuestionAnsweringTrainer(BaseTrainer):
             end_acc = accuracy_score(all_end_labels, all_end_preds)
             avg_acc = (start_acc + end_acc) / 2.0
 
-            self.writer.add_scalar("Accuracy/Start", start_acc, epoch)
+            exact_match = sum(
+                                int(p_start == l_start and p_end == l_end)
+                                for p_start, l_start, p_end, l_end in zip(all_start_preds, all_start_labels, all_end_preds, all_end_labels)
+                            ) / len(all_start_preds)
+
+            self.writer.add_scalar("Accuracy/Start", exact_match, epoch)
             self.writer.add_scalar("Accuracy/End", end_acc, epoch)
             self.writer.add_scalar("Accuracy/Average", avg_acc, epoch)
 
