@@ -41,9 +41,9 @@ class TokenClassificationDataset(Dataset):
                 labels_aligned[i] = -100
             elif isinstance(word_idx, int):
                 if word_idx < len(labels):
-                    label_str = labels[word_idx]
-                    label_id = self.label2id.get(label_str, self.label2id.get("O", 0))
-                    labels_aligned[i] = label_id
+                    # label_str = labels[word_idx]
+                    # label_id = self.label2id.get(label_str, self.label2id.get("O", 0))
+                    labels_aligned[i] = labels[word_idx]
                     # print(f"[DEBUG] token_idx={i}, word_idx={word_idx}, label_str={label_str}, label_id={label_id}")
                 else:
                     labels_aligned[i] = -100
