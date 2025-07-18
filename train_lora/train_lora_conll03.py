@@ -4,10 +4,10 @@ import sys
 #sys.path.append("/content/dynamo") 
 
 import os
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+# sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 # COLAB替代方式：直接添加项目根路径
-#project_root = "/content/dynamo" 
-#sys.path.append(project_root)
+project_root = "/content/dynamo" 
+sys.path.append(project_root)
 
 import json
 import torch
