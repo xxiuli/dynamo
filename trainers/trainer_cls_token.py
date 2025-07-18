@@ -17,7 +17,7 @@ class TokenClassificationTrainer(BaseTrainer):
     def _forward_step(self, batch):
         try:
             outputs = self.model(**batch)
-            return outputs, outputs.loss
+            return outputs, outputs["loss"]
         except Exception as e:
             raise RuntimeError(f"[ERROR] Model forward pass failed: {e}")
 
@@ -43,8 +43,13 @@ class TokenClassificationTrainer(BaseTrainer):
                 for i, batch in enumerate(val_loader):
                     try:
                         # 如果本地调试，limit_batches=2， 那么就跑2个EPOACH就停了
-                        if limit_batches is not None and i >= limit_batches:
-                            break
+                        # if limit_batches is not None and i >= limit_batches:
+                        #     break
+
+                        if not isinstance(batch['labels'], torch.Tensor):
+                            batch['labels'] = torch.tensor(batch['labels'], dtype=torch.long)
+                        else:
+                            batch['labels'] = batch['labels'].to(torch.long)
 
                         batch = {k: v.to(self.device) for k, v in batch.items()}
                         outputs = self.model(**batch)
@@ -64,6 +69,17 @@ class TokenClassificationTrainer(BaseTrainer):
                     except Exception as e:
                         batch_keys = list(batch.keys()) if isinstance(batch, dict) else "Unavailable"
                         print(f"[WARNING] Skipped batch {i} due to error: {e}. Batch keys: {batch_keys}")
+
+            try: 
+                if isinstance(all_preds, list):
+                    all_preds = torch.cat(all_preds).cpu().numpy()
+                if isinstance(all_labels, list):
+                    all_labels = torch.cat(all_labels).cpu().numpy()
+
+                assert len(all_preds) == len(all_labels), f"preds: {len(all_preds)}, labels: {len(all_labels)}"
+            except Exception as e:
+                print(f"[ERROR] Failed to concat predictions: {e}")
+                return {"val_loss": float("inf"), "val_acc": 0.0}
 
             if len(all_preds) == 0:
                 print(f"[WARNING] No valid predictions to evaluate at epoch {epoch}")

@@ -19,7 +19,9 @@ class CustomClassificationModel(nn.Module):
         self.head = ClassificationHead(hidden_size, num_labels)
 
     # 模型整体的 forward , 把数据FORWARD向HEAD
-    def forward(self, input_ids, attention_mask=None, labels=None, inputs_embeds=None, **kwargs): 
+    # def forward(self, input_ids, attention_mask=None, labels=None, inputs_embeds=None, **kwargs): 
+    def forward(self, input_ids, attention_mask=None,inputs_embeds=None, **kwargs): 
+
         # Step 1: 输入进入 RoBERTa（或 BERT）
         outputs = self.backbone(
             input_ids=input_ids, 

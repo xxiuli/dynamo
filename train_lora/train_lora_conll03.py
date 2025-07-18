@@ -69,6 +69,7 @@ def main(config_path):
 
     # Step 1. 读取标签映射 & 加载 tokenizer 和 model
     label2id = load_label_map(config['data']['label2id_file'])
+    config['label2id'] = label2id
     tokenizer, base_model = load_tokenizer_and_model(config, label2id)
 
     # Step 2. 注入 LoRA
