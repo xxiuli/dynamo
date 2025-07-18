@@ -37,8 +37,8 @@ class QuestionAnsweringTrainer(BaseTrainer):
                     try:
                         batch = {k: v.to(self.device) for k, v in batch.items()}
                         # print(f"[DEBUG] Epoch {epoch}, Batch {i}, Labels: {batch['labels']}")
-                        print(f"[DEBUG] start_positions: {batch['start_positions'].min()} ~ {batch['start_positions'].max()}")
-                        print(f"[DEBUG] end_positions: {batch['end_positions'].min()} ~ {batch['end_positions'].max()}")
+                        # print(f"[DEBUG] start_positions: {batch['start_positions'].min()} ~ {batch['start_positions'].max()}")
+                        # print(f"[DEBUG] end_positions: {batch['end_positions'].min()} ~ {batch['end_positions'].max()}")
                         
                         outputs = self.model(
                             input_ids=batch["input_ids"],
@@ -48,14 +48,14 @@ class QuestionAnsweringTrainer(BaseTrainer):
                         )
 
                         loss = outputs.loss
-                        # print(f"[DEBUG] Epoch {epoch}, Batch {i}, Loss: {loss.item()}")
-
                         total_loss += loss.item()
 
                         start_preds = torch.argmax(outputs.start_logits, dim=1).cpu().tolist()
                         end_preds = torch.argmax(outputs.end_logits, dim=1).cpu().tolist()
                         start_labels = batch["start_positions"].cpu().tolist()
                         end_labels = batch["end_positions"].cpu().tolist()
+
+                        print(f"[DEBUG] loss={loss.item():.4f}, start_pred={start_preds[0]}, start_label={start_labels[0]}")
 
                         all_start_preds.extend(start_preds)
                         all_end_preds.extend(end_preds)
@@ -89,7 +89,8 @@ class QuestionAnsweringTrainer(BaseTrainer):
 
             return {
                 "val_loss": val_loss,
-                "val_acc": avg_acc
+                "val_acc": avg_acc,
+                "val_exact_match": exact_match
             }
 
         except Exception as e:

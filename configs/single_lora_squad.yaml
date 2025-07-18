@@ -19,13 +19,13 @@ lora:
 train:
   seed: 42
   batch_size: 8         # QA类任务可以适当减小batch
-  learning_rate: 3e-5    # 通常QA比分类任务学习率更小
-  num_epochs: 3
+  learning_rate: 2e-5    # 通常QA比分类任务学习率更小
+  num_epochs: 5
   # num_epochs: 1
   max_seq_length: 384    # QA一般较长 max_seq_length 要控制在统一范围（比如都不超过 512）
   optimizer: adamw
   lr_scheduler: linear
-  warmup_ratio: 0.1
+  warmup_ratio: 0.2
 
 # ========= 早停策略（可选）=========
 early_stopping:
