@@ -11,6 +11,8 @@ class TokenClassificationTrainer(BaseTrainer):
         try:
             self.label2id = config['label2id']
             self.id2label = {v: k for k, v in self.label2id.items()}
+            print(f"[debug] CHECK 1: {model.config.label2id}")
+            print(f"[debug] CHECK 2: {model.config.id2label}")
         except KeyError as e:
             raise ValueError(f"[ERROR] label2id not found in config: {e}")
 
@@ -55,6 +57,9 @@ class TokenClassificationTrainer(BaseTrainer):
                         # print(f"[DEBUG] Epoch {epoch}, Batch {i}, Labels: {batch['labels']}")
 
                         outputs = self.model(**batch)
+                        print(f"[DEBUG] logits shape: {outputs.logits.shape}")
+                        print(f"[DEBUG] labels shape: {batch['labels'].shape}") # 应该是 [batch, seq_len]
+
                         loss = outputs.loss
                         # print(f"[DEBUG] Epoch {epoch}, Batch {i}, Loss: {loss.item()}")
 
@@ -63,11 +68,16 @@ class TokenClassificationTrainer(BaseTrainer):
                         predictions = torch.argmax(outputs.logits, dim=-1)
                         labels = batch['labels']
 
+                        for p, l in zip(predictions, labels):
+                            if l != -100:
+                              print(f"[DEBUG] pred={p}, label={l}")
+
                         for pred, label in zip(predictions, labels):
                             pred = pred.cpu().numpy().tolist()
                             label = label.cpu().numpy().tolist()
                             for p, l in zip(pred, label):
                                 if l != -100:
+                                    print(f"[DEBUG] pred={p}, label={l}")
                                     all_preds.append(p)
                                     all_labels.append(l)
                     except Exception as e:
