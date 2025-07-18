@@ -23,6 +23,9 @@ def apply_path_placeholders(config):
     data_root = os.environ.get("DATA_ROOT", "/content/dynamo/data")
     drive_root = os.environ.get("DRIVE_ROOT", "/content/drive/MyDrive")
 
+    # data_root = os.environ.get("DATA_ROOT", os.path.abspath("data"))        # 本地的 ./data
+    # drive_root = os.environ.get("DRIVE_ROOT", os.path.abspath("test"))      # 本地的 ./test
+
     def replace_path(value):
         return (value.replace("${DATA_ROOT}", data_root)
                     .replace("${DRIVE_ROOT}", drive_root)) if isinstance(value, str) else value
@@ -31,5 +34,8 @@ def apply_path_placeholders(config):
     config['data']['val_file'] = replace_path(config['data']['val_file'])
     config['output']['save_dir'] = replace_path(config['output']['save_dir'])
     config['output']['log_dir'] = replace_path(config['output']['log_dir'])
+
+    if config['data']['label2id_file']:
+        config['data']['label2id_file'] = replace_path(config['data']['label2id_file'])
     
     return config
