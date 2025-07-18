@@ -1,50 +1,57 @@
 # dataset_cls_pair.py           # mnli, qqp
 
+# data_loaders/dataset_cls_pair.py
+
 import json
 import torch
 from torch.utils.data import Dataset
 
-class PairTextClassificationDataset(Dataset):
+class PairedTextClassificationDataset(Dataset):
     def __init__(self, file_path, tokenizer, max_seq_len):
+        self.samples = []
         self.tokenizer = tokenizer
         self.max_seq_len = max_seq_len
-        self.samples = []
 
         with open(file_path, 'r', encoding='utf-8') as f:
             for line in f:
                 item = json.loads(line)
-                if 'premise' in item and 'hypothesis' in item:
-                    text1 = item['premise']
-                    text2 = item['hypothesis']
-                elif 'question1' in item and 'question2' in item:
-                    text1 = item['question1']
-                    text2 = item['question2']
+
+                # 兼容不同字段
+                if "premise" in item and "hypothesis" in item:
+                    sent1 = item["premise"]
+                    sent2 = item["hypothesis"]
+                elif "question1" in item and "question2" in item:
+                    sent1 = item["question1"]
+                    sent2 = item["question2"]
                 else:
-                    raise ValueError("Invalid sample format: missing expected pair fields")
-                label = int(item['label'])
-                self.samples.append((text1, text2, label))
+                    raise ValueError(f"[ERROR] Unknown paired input keys in item: {item}")
+
+                self.samples.append({
+                    "sentence1": sent1,
+                    "sentence2": sent2,
+                    "label": int(item["label"])
+                })
+
+        if not self.samples:
+            raise ValueError(f"[ERROR] Empty dataset at: {file_path}")
 
     def __len__(self):
         return len(self.samples)
 
     def __getitem__(self, idx):
-        text1, text2, label = self.samples[idx]
+        item = self.samples[idx]
         encoding = self.tokenizer(
-            text1,
-            text2,
+            item["sentence1"],
+            item["sentence2"],
             truncation=True,
-            padding='max_length',
+            padding="max_length",
             max_length=self.max_seq_len,
-            return_tensors='pt'
+            return_tensors="pt"
         )
 
-        try:
-            label = int(label)  # 保证是 int (需要计算LOSS的时候不是字符串)
-        except ValueError:
-            raise ValueError(f"Invalid label: {label} (type: {type(label)})")
-
         return {
-            'input_ids': encoding['input_ids'].squeeze(0),
-            'attention_mask': encoding['attention_mask'].squeeze(0),
-            'label': torch.tensor(label, dtype=torch.long)
+            "input_ids": encoding["input_ids"].squeeze(0),
+            "attention_mask": encoding["attention_mask"].squeeze(0),
+            "labels": torch.tensor(item["label"], dtype=torch.long)
         }
+

@@ -127,7 +127,7 @@ if __name__ == '__main__':
 
         # 仅当在 Colab 或 Jupyter 环境下运行时 mock sys.argv
         if 'google.colab' in sys.modules:
-            sys.argv = ['train_lora_cls.py', '--config', '/content/dynamo/configs/single_lora_sst2.yaml']
+            sys.argv = ['train_lora_cls.py', '--config', '/content/dynamo/configs/single_lora_agnews.yaml']
         
         args = parse_args()
         main(args.config)
