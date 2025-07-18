@@ -14,7 +14,7 @@ class SingleClassificationTrainer(BaseTrainer):
         return outputs, outputs["loss"]
 
     def evaluate(self, val_loader, epoch):
-        print(f"[DEBUG][evaluate()] called at epoch {epoch}")
+        # print(f"[DEBUG][evaluate()] called at epoch {epoch}")
 
         debug_config = self.config.get("debug", {})
         skip_evaluation = debug_config.get("skip_evaluation", False)
@@ -83,7 +83,7 @@ class SingleClassificationTrainer(BaseTrainer):
             plot_confusion_matrix_to_tensorboard(
                 preds=all_preds,
                 labels=labels,
-                class_name=self.class_names,
+                class_names=self.class_names,
                 writer=self.writer,
                 epoch=epoch
             )

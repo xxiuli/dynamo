@@ -139,7 +139,7 @@ class BaseTrainer(ABC):
                 print(f"[DEBUG] Skipped evaluation at epoch {epoch+1}.")
             
         save_model(self, final=True)
-        print("[INFO] Saving final model to disk.")
+        
         self.writer.close()
 
     @abstractmethod

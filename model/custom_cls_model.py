@@ -2,6 +2,8 @@ from transformers import AutoModel
 from heads.classification_head import ClassificationHead
 import torch.nn as nn
 from transformers.modeling_outputs import SequenceClassifierOutput
+import os
+import torch
 
 class CustomClassificationModel(nn.Module):
     def __init__(self, backbone_name, num_labels, ignore_mismatched_sizes=False):
@@ -47,3 +49,30 @@ class CustomClassificationModel(nn.Module):
             hidden_states=outputs.hidden_states,
             attentions=outputs.attentions
         )
+    
+    def save_pretrained(self, save_directory):
+        os.makedirs(save_directory, exist_ok=True)
+        # 保存 backbone（如 RobertaModel）
+        self.backbone.save_pretrained(save_directory)
+        # 另外保存你自定义的 head
+        torch.save(self.head.state_dict(), os.path.join(save_directory, "head.pth"))
+        # 保存 config
+        with open(os.path.join(save_directory, "config.json"), "w") as f:
+            f.write(self.config.to_json_string())
+
+    @classmethod #告诉 Python 这个方法是类方法，不是实例方法
+    def from_pretrained(cls, load_directory):
+        # 1. 加载 backbone（包括 config）
+        backbone = AutoModel.from_pretrained(load_directory)
+        config = backbone.config
+        num_labels = config.num_labels  # 从 config 中读
+
+        # 2. 构建模型
+        model = cls(backbone_name=load_directory, num_labels=num_labels)
+
+        # 3. 加载自定义的分类头
+        head_path = os.path.join(load_directory, "head.pth")
+        model.head.load_state_dict(torch.load(head_path, map_location='cpu'))
+
+        return model
+

@@ -81,12 +81,16 @@ def save_model(trainer, final=False, epoch=None):
         # 保存 base model（只保存一次）
         if final and hasattr(trainer.model, 'base_model'):
             base_path = os.path.join(trainer.save_dir, 'base')
-            try:
-                trainer.model.base_model.save_pretrained(base_path)
-            except Exception as e:
-                print(f"[WARNING] Failed to save base model: {e}")
+            if not os.path.exists(os.path.join(base_path, 'pytorch_model.bin')):
+                try:
+                    os.makedirs(base_path, exist_ok=True)
+                    trainer.model.base_model.save_pretrained(base_path)
+                    print(f"[INFO] Base model saved to {base_path}")
+                except Exception as e:
+                    print(f"[WARNING] Failed to save base model: {e}")
+            else:
+                print(f"[INFO] Base model already exists at {base_path}, skipping save.")
 
-        print(f"[INFO] Model saved to {path}")
     except Exception as e:
         print(f"[ERROR] Failed to save model: {e}")
     
