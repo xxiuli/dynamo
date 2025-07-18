@@ -55,12 +55,22 @@ class SingleClassificationTrainer(BaseTrainer):
                     predictions = torch.argmax(outputs.logits, dim=-1)
                     labels = batch['labels']
 
-
-                    all_preds.extend(predictions.cpu().numpy())
-                    all_labels.extend(labels.cpu().numpy())
+                    all_preds.append(predictions.cpu())  # 不转 numpy
+                    all_labels.append(labels.cpu())
                 except Exception as e:
                     batch_keys = list(batch.keys()) if isinstance(batch, dict) else "Unavailable"
                     print(f"[WARNING] Skipped batch {i} due to error: {e}. Batch keys: {batch_keys}")
+
+        try: 
+            if isinstance(all_preds, list):
+                all_preds = torch.cat(all_preds).cpu().numpy()
+            if isinstance(all_labels, list):
+                all_labels = torch.cat(all_labels).cpu().numpy()
+
+            assert len(all_preds) == len(all_labels), f"preds: {len(all_preds)}, labels: {len(all_labels)}"
+        except Exception as e:
+            print(f"[ERROR] Failed to concat predictions: {e}")
+            return {"val_loss": float("inf"), "val_acc": 0.0}
 
         if len(all_preds) == 0:
             print(f"[WARNING] No valid predictions to evaluate at epoch {epoch}")
@@ -82,7 +92,7 @@ class SingleClassificationTrainer(BaseTrainer):
         try:
             plot_confusion_matrix_to_tensorboard(
                 preds=all_preds,
-                labels=labels,
+                labels=all_labels,
                 class_names=self.class_names,
                 writer=self.writer,
                 epoch=epoch

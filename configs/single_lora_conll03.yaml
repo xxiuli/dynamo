@@ -48,6 +48,6 @@ output:
 debug:
   skip_evaluation: false    # 不跳评估，让模型至少走一次评估流程
   skip_training: false 
-  limit_batches: None
+  limit_batches: null
   # skip_training: true       # 本地测试时用：跳过训练主循环，只测试evaluate和保存流程
   # limit_batches: 2          # 本地测试时用：：只取前2个batch进行evaluate（None表示不限制）
