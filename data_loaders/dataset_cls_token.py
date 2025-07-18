@@ -45,13 +45,13 @@ class TokenClassificationDataset(Dataset):
                     label_str = labels[word_idx]
                     label_id = self.label2id.get(label_str, self.label2id.get("O", 0))
                     labels_aligned[i] = label_id
-                    print(f"[DEBUG] token_idx={i}, word_idx={word_idx}, label_str={label_str}, label_id={label_id}")
+                    # print(f"[DEBUG] token_idx={i}, word_idx={word_idx}, label_str={label_str}, label_id={label_id}")
                 else:
                     labels_aligned[i] = -100
-                    print(f"[WARNING] word_idx={word_idx} out of bounds for label list of length {len(labels)}")
+                    # print(f"[WARNING] word_idx={word_idx} out of bounds for label list of length {len(labels)}")
             else:
                 labels_aligned[i] = -100
-                print(f"[WARNING] Unexpected word_idx type: {word_idx} ({type(word_idx)})")
+                # print(f"[WARNING] Unexpected word_idx type: {word_idx} ({type(word_idx)})")
 
         return {
             'input_ids': encoding['input_ids'].squeeze(0),
