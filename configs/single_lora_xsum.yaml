@@ -11,7 +11,7 @@ lora:
   r: 8
   alpha: 16
   dropout: 0.1
-  target_modules: ["q", "v"]  #'只在 Transformer 的 Query 和 Value 层 注入 LoRA 权重.'.用于指定 哪些模块（子层）将被应用 LoRA 权重注入。这决定了 LoRA 微调过程中，哪些部分的权重会被替换为低秩矩阵，以实现参数高效微调。
+  target_modules: ["q_proj", "v_proj"]  #'只在 Transformer 的 Query 和 Value 层 注入 LoRA 权重.'.用于指定 哪些模块（子层）将被应用 LoRA 权重注入。这决定了 LoRA 微调过程中，哪些部分的权重会被替换为低秩矩阵，以实现参数高效微调。
 
 # ========= 训练参数 =========
 train:
