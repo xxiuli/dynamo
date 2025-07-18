@@ -105,6 +105,9 @@ def main(config_path):
 
 if __name__ == "__main__":
     try:
+        # 在COLAB建CELL：
+        # #!python train_lora/train_lora_conll03.py --config configs/single_lora_conll03.yaml
+        
         # 👇 若要切换任务，只需改 config 文件名即可：
         # single_lora_conll03.yaml
         if 'google.colab' in sys.modules:

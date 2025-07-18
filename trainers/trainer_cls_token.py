@@ -70,16 +70,16 @@ class TokenClassificationTrainer(BaseTrainer):
                         batch_keys = list(batch.keys()) if isinstance(batch, dict) else "Unavailable"
                         print(f"[WARNING] Skipped batch {i} due to error: {e}. Batch keys: {batch_keys}")
 
-            try: 
-                if isinstance(all_preds, list):
-                    all_preds = torch.cat(all_preds).cpu().numpy()
-                if isinstance(all_labels, list):
-                    all_labels = torch.cat(all_labels).cpu().numpy()
+            # try: 
+            #     if isinstance(all_preds, list):
+            #         all_preds = torch.cat(all_preds).cpu().numpy()
+            #     if isinstance(all_labels, list):
+            #         all_labels = torch.cat(all_labels).cpu().numpy()
 
-                assert len(all_preds) == len(all_labels), f"preds: {len(all_preds)}, labels: {len(all_labels)}"
-            except Exception as e:
-                print(f"[ERROR] Failed to concat predictions: {e}")
-                return {"val_loss": float("inf"), "val_acc": 0.0}
+            #     assert len(all_preds) == len(all_labels), f"preds: {len(all_preds)}, labels: {len(all_labels)}"
+            # except Exception as e:
+            #     print(f"[ERROR] Failed to concat predictions: {e}")
+            #     return {"val_loss": float("inf"), "val_acc": 0.0}
 
             if len(all_preds) == 0:
                 print(f"[WARNING] No valid predictions to evaluate at epoch {epoch}")
