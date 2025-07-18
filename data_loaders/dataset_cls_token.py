@@ -35,7 +35,6 @@ class TokenClassificationDataset(Dataset):
 
         labels_aligned = [-100] * self.max_length
         word_ids = encoding.word_ids(batch_index=0)
-        print(word_ids)
 
         for i, word_idx in enumerate(word_ids):
             if word_idx is None:
