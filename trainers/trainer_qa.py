@@ -7,6 +7,10 @@ class QuestionAnsweringTrainer(BaseTrainer):
     def __init__(self, model, config, device, tokenizer):
         super().__init__(model, config, device, tokenizer)
 
+    def _forward_step(self, batch):
+        outputs = self.model(**batch) ## 这里会触发所有的MODEL（ROBERTA+HEAD)里的函数执行
+        return outputs, outputs["loss"]
+
     def evaluate(self, val_loader, epoch):
         debug_config = self.config.get("debug", {})
         skip_evaluation = debug_config.get("skip_evaluation", False)

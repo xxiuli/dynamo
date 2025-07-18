@@ -27,15 +27,21 @@ def apply_path_placeholders(config):
     # drive_root = os.environ.get("DRIVE_ROOT", os.path.abspath("test"))      # 本地的 ./test
 
     def replace_path(value):
-        return (value.replace("${DATA_ROOT}", data_root)
-                    .replace("${DRIVE_ROOT}", drive_root)) if isinstance(value, str) else value
+        if isinstance(value, str):
+            replaced = value.replace("${DATA_ROOT}", data_root).replace("${DRIVE_ROOT}", drive_root)
+            # ✅ Windows 修复：去除非法路径开头的 '/'（例如 '/C:/Users/...' -> 'C:/Users/...')
+            if os.name == "nt" and replaced.startswith("/") and ":" in replaced:
+                replaced = replaced[1:]
+            return replaced
+        return value
+    
 
     config['data']['train_file'] = replace_path(config['data']['train_file'])
     config['data']['val_file'] = replace_path(config['data']['val_file'])
     config['output']['save_dir'] = replace_path(config['output']['save_dir'])
     config['output']['log_dir'] = replace_path(config['output']['log_dir'])
 
-    if config['data']['label2id_file']:
+    if 'label2id_file' in config['data'] and config['data']['label2id_file']:
         config['data']['label2id_file'] = replace_path(config['data']['label2id_file'])
     
     return config
