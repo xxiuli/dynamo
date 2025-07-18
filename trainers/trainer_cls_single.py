@@ -39,8 +39,8 @@ class SingleClassificationTrainer(BaseTrainer):
                     # if limit_batches is not Null and i >= limit_batches:
                     #     break
 
-                    print(f"[DEBUG] Batch {i} raw labels: {batch['labels'][:5]}")
-                    print(f"[DEBUG] Dtype: {batch['labels'].dtype}, shape: {batch['labels'].shape}, type: {type(batch['labels'])}")
+                    # print(f"[DEBUG] Batch {i} raw labels: {batch['labels'][:5]}")
+                    # print(f"[DEBUG] Dtype: {batch['labels'].dtype}, shape: {batch['labels'].shape}, type: {type(batch['labels'])}")
 
                     if not isinstance(batch['labels'], torch.Tensor):
                         batch['labels'] = torch.tensor(batch['labels'], dtype=torch.long)
@@ -82,7 +82,7 @@ class SingleClassificationTrainer(BaseTrainer):
         try:
             plot_confusion_matrix_to_tensorboard(
                 preds=all_preds,
-                label=labels,
+                labels=labels,
                 class_name=self.class_names,
                 writer=self.writer,
                 epoch=epoch
