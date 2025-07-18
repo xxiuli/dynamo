@@ -52,9 +52,9 @@ class TokenClassificationDataset(Dataset):
                 labels_aligned[i] = -100
                 # print(f"[WARNING] Unexpected word_idx type: {word_idx} ({type(word_idx)})")
 
-        print(f"tokens: {tokens}")
-        print(f"labels: {labels}")
-        print(f"aligned: {labels_aligned[:len(tokens)]}")
+        # print(f"tokens: {tokens}")
+        # print(f"labels: {labels}")
+        # print(f"aligned: {labels_aligned[:len(tokens)]}")
 
         return {
             'input_ids': encoding['input_ids'].squeeze(0),
