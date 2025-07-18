@@ -10,7 +10,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import torch
 from torch.utils.data import DataLoader
-from transformers import AutoTokenizer
+from transformers import AutoModelForQuestionAnswering, AutoTokenizer
 from peft import get_peft_model, LoraConfig, TaskType
 
 from trainers.trainer_qa import QuestionAnsweringTrainer
@@ -21,7 +21,8 @@ from model.custom_cls_model import CustomClassificationModel
 
 def load_tokenizer_and_model(config):
     tokenizer = AutoTokenizer.from_pretrained(config['backbone_model'])
-    base_model = CustomClassificationModel(
+
+    base_model = AutoModelForQuestionAnswering.from_pretrained(
         config['backbone_model'], 
         num_labels=config['num_labels'],
         ignore_mismatched_sizes=True
