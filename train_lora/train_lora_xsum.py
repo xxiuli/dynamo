@@ -21,7 +21,7 @@ from model.custom_cls_model import CustomClassificationModel
 
 def load_tokenizer_and_model(config):
     tokenizer = AutoTokenizer.from_pretrained(config['backbone_model'])
-    base_model = CustomClassificationModel(
+    base_model = AutoModelForSeq2SeqLM.from_pretrained(
         config['backbone_model'], 
         num_labels=config['num_labels'],
         ignore_mismatched_sizes=True
