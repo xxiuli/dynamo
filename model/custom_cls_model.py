@@ -35,7 +35,7 @@ class CustomClassificationModel(nn.Module):
 
         # Step 3: 输入到分类头（Head 会自动调用它的 forward）
         # logits = 模型输出的每个类别的原始分数（未归一化）
-        logits = self.classifier(sequence_output)             # [batch_size, seq_len, num_labels]     
+        logits = self.head(sequence_output)             # [batch_size, seq_len, num_labels]     
 
         loss = None
 
