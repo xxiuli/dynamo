@@ -36,6 +36,7 @@ class QuestionAnsweringTrainer(BaseTrainer):
                         break
                     try:
                         batch = {k: v.to(self.device) for k, v in batch.items()}
+                        print(f"[DEBUG] Epoch {epoch}, Batch {i}, Labels: {batch['labels']}")
 
                         outputs = self.model(
                             input_ids=batch["input_ids"],
@@ -45,6 +46,8 @@ class QuestionAnsweringTrainer(BaseTrainer):
                         )
 
                         loss = outputs.loss
+                        print(f"[DEBUG] Epoch {epoch}, Batch {i}, Loss: {loss.item()}")
+
                         total_loss += loss.item()
 
                         start_preds = torch.argmax(outputs.start_logits, dim=1).cpu().tolist()

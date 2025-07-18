@@ -86,8 +86,7 @@ def main(config_path):
 if __name__ == "__main__":
     try:
         import sys
-        # 👇 若要切换任务，只需改 config 文件名即可：
-        # single_lora_squad.yaml
+        # 👇 !python train_lora/train_lora_squad.py --config configs/single_lora_squad.yaml
 
         # 仅当在 Colab 或 Jupyter 环境下运行时 mock sys.argv
         if 'google.colab' in sys.modules:
