@@ -9,30 +9,30 @@ backbone_model: deepset/roberta-base-squad2 # （必须一致）
 
 # LoRA 超参（必须一致）
 lora:
-  r: 8
-  alpha: 16
-  dropout: 0.1
+  r: 16
+  alpha: 32
+  dropout: 0.05
   target_modules: ["query", "value"] # LoRA插入位置（必须一致）
 
 
 # ========= 训练参数 =========
 train:
   seed: 42
-  batch_size: 8         # QA类任务可以适当减小batch
+  batch_size: 4         # QA类任务可以适当减小batch
   learning_rate: 1e-5    # 通常QA比分类任务学习率更小
   num_epochs: 8
   # num_epochs: 1
   max_seq_length: 384    # QA一般较长 max_seq_length 要控制在统一范围（比如都不超过 512）
   optimizer: adamw
-  # lr_scheduler: linear
-  lr_scheduler: cosine
-  warmup_ratio: 0.2
-  label_smoothing: 0.1
+  lr_scheduler: linear
+  # lr_scheduler: cosine
+  warmup_ratio: 0.1
+  label_smoothing: 0.06
 
 # ========= 早停策略（可选）=========
 early_stopping:
   enabled: true
-  patience: 3
+  patience: 5
   monitor: val_exact_match  # best model
   mode: max          # val_loss是min，val_acc是max, val_f1是max
 
@@ -43,7 +43,7 @@ data:
 output:
   save_dir: /${DRIVE_ROOT}/DynamoRouterCheckpoints/adapter_squad
   save_best_only: true
-  monitor_metric: val_loss  # 自动对齐 early_stopping
+  monitor_metric: val_exact_match  # 自动对齐 early_stopping
   save_lora_adapter: true
   save_task_head: true
   log_dir: ${DRIVE_ROOT}/DynamoRouterLogs/adapter_squad
