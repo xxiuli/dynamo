@@ -19,24 +19,26 @@ lora:
 train:
   seed: 42
   batch_size: 8         # QA类任务可以适当减小batch
-  learning_rate: 2e-5    # 通常QA比分类任务学习率更小
-  num_epochs: 5
+  learning_rate: 1e-5    # 通常QA比分类任务学习率更小
+  num_epochs: 8
   # num_epochs: 1
   max_seq_length: 384    # QA一般较长 max_seq_length 要控制在统一范围（比如都不超过 512）
   optimizer: adamw
-  lr_scheduler: linear
+  # lr_scheduler: linear
+  lr_scheduler: cosine
   warmup_ratio: 0.2
+  label_smoothing: 0.1
 
 # ========= 早停策略（可选）=========
 early_stopping:
   enabled: true
-  patience: 2
+  patience: 3
   monitor: val_exact_match  # best model
   mode: max          # val_loss是min，val_acc是max, val_f1是max
 
 data:
-  train_file: ${DATA_ROOT}/single_lora_data/squad_train_07182025_1701.json
-  val_file: ${DATA_ROOT}/single_lora_data/squad_validation_07182025_1701.json
+  train_file: ${DATA_ROOT}/single_lora_data/squad_train_07192025_0549.json
+  val_file: ${DATA_ROOT}/single_lora_data/squad_validation_07192025_0549.json
 
 output:
   save_dir: /${DRIVE_ROOT}/DynamoRouterCheckpoints/adapter_squad

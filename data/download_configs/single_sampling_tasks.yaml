@@ -32,8 +32,8 @@ tasks:
     subset: null
     train_split: "train"
     val_split: "validation"
-    train_samples: 15000
-    val_samples: 3000
+    train_samples: 50000
+    val_samples: 9000
 
   xsum:
     dataset_name: "xsum"

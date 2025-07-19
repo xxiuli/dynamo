@@ -47,7 +47,16 @@ class QuestionAnsweringTrainer(BaseTrainer):
                             end_positions=batch["end_positions"]
                         )
 
-                        loss = outputs.loss
+                        # loss = outputs.loss
+
+                        # 替换原始损失函数
+                        loss_fn = torch.nn.CrossEntropyLoss(label_smoothing=0.1)
+
+                        loss = (
+                            loss_fn(outputs.start_logits, batch["start_positions"]) +
+                            loss_fn(outputs.end_logits, batch["end_positions"])
+                        ) / 2
+                        
                         total_loss += loss.item()
 
                         start_preds = torch.argmax(outputs.start_logits, dim=1).cpu().tolist()
