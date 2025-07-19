@@ -7,8 +7,8 @@
       "request": "launch",
       "program": "${workspaceFolder}/data/scripts/single_sampling.py",
       "args": [
-        "--config_doc", "data/configs/single_sampling_tasks.yaml",
-        "--task", "agnews", 
+        "--config_doc", "data/download_configs/single_sampling_tasks.yaml",
+        "--task", "squad", 
         // "--task", "xsum", "conll2003",
         // "--task", "sst2", "mnli", "qqp", "squad", "xsum", "agnews", "conll2003",
       ],
@@ -20,7 +20,7 @@
       "request": "launch",
       "program": "${workspaceFolder}/data/scripts/get_router_data.py",
       "args": [
-        "--config_doc", "data/configs/router_sampling.yaml",
+        "--config_doc", "data/download_configs/router_sampling.yaml",
         // "--task", "xsum", "conll2003",
         "--task", "sst2", "mnli", "qqp", "squad", "xsum", "agnews", "conll2003",
       ],

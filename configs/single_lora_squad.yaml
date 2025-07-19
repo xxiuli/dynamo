@@ -31,12 +31,12 @@ train:
 early_stopping:
   enabled: true
   patience: 2
-  monitor: val_loss   # best model
-  mode: min          # val_loss是min，val_acc是max, val_f1是max
+  monitor: val_exact_match  # best model
+  mode: max          # val_loss是min，val_acc是max, val_f1是max
 
 data:
-  train_file: ${DATA_ROOT}/single_lora_data/squad_train_07052025_1527.json
-  val_file: ${DATA_ROOT}/single_lora_data/squad_validation_07052025_1527.json
+  train_file: ${DATA_ROOT}/single_lora_data/squad_train_07182025_1701.json
+  val_file: ${DATA_ROOT}/single_lora_data/squad_validation_07182025_1701.json
 
 output:
   save_dir: /${DRIVE_ROOT}/DynamoRouterCheckpoints/adapter_squad
