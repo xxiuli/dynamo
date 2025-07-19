@@ -5,14 +5,14 @@ task_type: qa
 num_labels: 2
 
 # ========= 模型结构 =========
-backbone_model: deepset/roberta-base-squad2 # （必须一致）
+backbone_model: deepset/roberta-large-squad2# （必须一致）
 
 # LoRA 超参（必须一致）
 lora:
   r: 16
   alpha: 32
   dropout: 0.05
-  target_modules: ["query", "value"] # LoRA插入位置（必须一致）
+  target_modules: ["query", "key", "value", "dense"] # LoRA插入位置（必须一致）
 
 
 # ========= 训练参数 =========
@@ -33,7 +33,7 @@ train:
 early_stopping:
   enabled: true
   patience: 5
-  monitor: val_exact_match  # best model
+  monitor: val_f1  # best model
   mode: max          # val_loss是min，val_acc是max, val_f1是max
 
 data:
@@ -43,7 +43,7 @@ data:
 output:
   save_dir: /${DRIVE_ROOT}/DynamoRouterCheckpoints/adapter_squad
   save_best_only: true
-  monitor_metric: val_exact_match  # 自动对齐 early_stopping
+  monitor_metric: val_f1  # 自动对齐 early_stopping
   save_lora_adapter: true
   save_task_head: true
   log_dir: ${DRIVE_ROOT}/DynamoRouterLogs/adapter_squad
