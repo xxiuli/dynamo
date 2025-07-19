@@ -33,40 +33,38 @@ class QuestionAnsweringDataset(Dataset):
             except IndexError:
                 raise ValueError(f"[ERROR] Missing answer for item: {item['id']}")
 
-        try:
-            encoding = self.tokenizer(
-                question,
-                context,
-                max_length=self.max_length,
-                truncation="only_second",
-                padding="max_length",
-                stride=self.doc_stride,
-                return_offsets_mapping=True,
-                return_tensors="pt"
-            )
+        
+        encoding = self.tokenizer(
+            question,
+            context,
+            max_length=self.max_length,
+            truncation=True,
+            padding="max_length",
+            stride=self.doc_stride,
+            return_offsets_mapping=True,
+            return_tensors="pt"
+        )
 
-            # 计算 answer span 的 start/end token index
-            offset_mapping = encoding["offset_mapping"][0]
-            start_char = answer_start
-            end_char = answer_start + len(answer_text)
+        # 计算 answer span 的 start/end token index
+        offset_mapping = encoding["offset_mapping"][0]
+        start_char = answer_start
+        end_char = answer_start + len(answer_text)
 
-            sequence_ids = encoding.sequence_ids(0)
-            start_idx = end_idx = 0
+        sequence_ids = encoding.sequence_ids(0)
+        start_idx = end_idx = 0
 
-            for i, (offset, seq_id) in enumerate(zip(offset_mapping, sequence_ids)):
-                if seq_id != 1:
-                    continue  # 只考虑 context 部分
-                if offset[0] <= start_char and offset[1] > start_char:
-                    start_idx = i
-                if offset[0] < end_char and offset[1] >= end_char:
-                    end_idx = i
+        for i, (offset, seq_id) in enumerate(zip(offset_mapping, sequence_ids)):
+            if seq_id != 1:
+                continue  # 只考虑 context 部分
+            if offset[0] <= start_char and offset[1] > start_char:
+                start_idx = i
+            if offset[0] < end_char and offset[1] >= end_char:
+                end_idx = i
 
-            return {
-                "input_ids": encoding["input_ids"].squeeze(0),
-                "attention_mask": encoding["attention_mask"].squeeze(0),
-                "start_positions": torch.tensor(start_idx, dtype=torch.long),
-                "end_positions": torch.tensor(end_idx, dtype=torch.long)
-            }
-        except Exception as e:
-            print(f"[WARNING] Skipped idx={idx} due to tokenizer error: {e}")
-            return self.__getitem__((idx + 1) % len(self))  # try next sample
+        return {
+            "input_ids": encoding["input_ids"].squeeze(0),
+            "attention_mask": encoding["attention_mask"].squeeze(0),
+            "start_positions": torch.tensor(start_idx, dtype=torch.long),
+            "end_positions": torch.tensor(end_idx, dtype=torch.long)
+        }
+       

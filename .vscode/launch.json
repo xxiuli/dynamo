@@ -15,7 +15,14 @@
       "console": "integratedTerminal"
     },
     {
-      "name": "Debug router_sampling", //下载数据集用
+      "name": "clean dataset", 
+      "type": "python",
+      "request": "launch",
+      "program": "${workspaceFolder}/data/scripts/clean_for_squad.py",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Debug router_sampling",
       "type": "python",
       "request": "launch",
       "program": "${workspaceFolder}/data/scripts/get_router_data.py",
