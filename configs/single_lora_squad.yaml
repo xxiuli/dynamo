@@ -5,7 +5,7 @@ task_type: qa
 num_labels: 2
 
 # ========= 模型结构 =========
-backbone_model: deepset/roberta-large-squad2# （必须一致）
+backbone_model: deepset/roberta-large-squad2
 
 # LoRA 超参（必须一致）
 lora:
