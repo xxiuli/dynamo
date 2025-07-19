@@ -37,8 +37,8 @@ early_stopping:
   mode: max          # val_loss是min，val_acc是max, val_f1是max
 
 data:
-  train_file: ${DATA_ROOT}/single_lora_data/squad_train__cleaned_file.json
-  val_file: ${DATA_ROOT}/single_lora_data/squad_val_cleaned_file.json
+  train_file: ${DATA_ROOT}/single_lora_data/squad_train__cleaned_file.jsonl
+  val_file: ${DATA_ROOT}/single_lora_data/squad_val_cleaned_file.jsonl
 
 output:
   save_dir: /${DRIVE_ROOT}/DynamoRouterCheckpoints/adapter_squad
