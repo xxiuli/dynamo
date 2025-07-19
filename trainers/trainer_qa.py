@@ -55,7 +55,7 @@ class QuestionAnsweringTrainer(BaseTrainer):
                         start_labels = batch["start_positions"].cpu().tolist()
                         end_labels = batch["end_positions"].cpu().tolist()
 
-                        print(f"[DEBUG] loss={loss.item():.4f}, start_pred={start_preds[0]}, start_label={start_labels[0]}")
+                        # print(f"[DEBUG] loss={loss.item():.4f}, start_pred={start_preds[0]}, start_label={start_labels[0]}")
 
                         all_start_preds.extend(start_preds)
                         all_end_preds.extend(end_preds)
