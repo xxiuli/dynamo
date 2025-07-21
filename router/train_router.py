@@ -32,9 +32,9 @@ def load_adapter(adapter_path, backbone_name):
     return model
 
 
-def main():
-    config = load_router_config("configs/router.yaml")
-    config = apply_path_placeholders(config)
+def main(argsConfig):
+    # config = load_router_config("configs/router.yaml")
+    config = apply_path_placeholders(argsConfig)
     print(f"\n🚀 Training task: {config['task_name']} started.")
 
     set_seed(config['training']['seed'])
