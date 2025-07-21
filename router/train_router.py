@@ -32,9 +32,9 @@ def load_adapter(adapter_path, backbone_name):
     return model
 
 
-def main(argsConfig):
+def main():
     # config = load_router_config("configs/router.yaml")
-    config = apply_path_placeholders(argsConfig)
+    config = apply_path_placeholders(config)
     print(f"\n🚀 Training task: {config['task_name']} started.")
 
     set_seed(config['training']['seed'])
@@ -76,7 +76,7 @@ if __name__ == "__main__":
             sys.argv = ['train_router.py', '--config', '/content/dynamo/configs/router.yaml']
         
         args = parse_args()
-        main(args.config)
+        main()
     except Exception as e:
         print(f"[FATAL] Uncaught exception: {e}")
         import traceback
