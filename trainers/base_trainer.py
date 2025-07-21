@@ -84,7 +84,8 @@ class BaseTrainer(ABC):
         for epoch in range(num_epochs):
             self.model.train()
             total_loss = 0
-            for step, batch in enumerate(tqdm(train_loader, desc=f'Epoch {epoch+1}', dynamic_ncols=True)):
+            # for step, batch in enumerate(tqdm(train_loader, desc=f'Epoch {epoch+1}', dynamic_ncols=True)):
+            for step, batch in enumerate(tqdm(train_loader, desc=f'Epoch {epoch+1}')):
                 batch = {k :v.to(self.device) for k, v in batch.items()}
                 
                 # 否则
