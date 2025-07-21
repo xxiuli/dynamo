@@ -11,10 +11,9 @@ import yaml
 import torch
 from router_classifier import RouterClassifier
 from peft import PeftModel
-from transformers import AutoModel, AutoTokenizer, get_scheduler, AdamW
+from transformers import AutoModel, AutoTokenizer, get_scheduler
 from head_manager import get_head
 from torch.utils.data import DataLoader
-from tqdm import tqdm
 from data_loaders.dataset_router import RouterDataset
 from utils.setting_utils import parse_args, apply_path_placeholders
 from utils.train_utils import set_seed
@@ -70,6 +69,7 @@ def main():
 
 if __name__ == "__main__":
     try:
+        # !python router/train_router.py --config configs/router.yaml
         import sys
         # 仅当在 Colab 或 Jupyter 环境下运行时 mock sys.argv
         if 'google.colab' in sys.modules:
