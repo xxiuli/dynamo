@@ -33,7 +33,7 @@ def load_adapter(adapter_path, backbone_name):
 
 
 def main():
-    # config = load_router_config("configs/router.yaml")
+    config = load_router_config("configs/router.yaml")
     config = apply_path_placeholders(config)
     print(f"\n🚀 Training task: {config['task_name']} started.")
 
