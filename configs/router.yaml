@@ -1,7 +1,7 @@
 # ========= Router 分类任务配置 =========
 task_type: classification
 num_labels: 7
-task_names: ['sst2', 'mnli', 'qqp', 'squad', 'conll03', 'xsum', 'agnews']
+task_name: 'router'
 
 
 # ========= 模型结构 =========
