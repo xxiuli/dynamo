@@ -35,9 +35,9 @@ def load_adapter(adapter_path, backbone_name):
 def main():
     config = load_router_config("configs/router.yaml")
     config = apply_path_placeholders(config)
-    print(f"\n🚀 Training task: {config['task_name']} started.")
+    # print(f"\n🚀 Training task: {config['task_name']} started.")
 
-    set_seed(config['training']['seed'])
+    set_seed(config['train']['seed'])
 
     # Load tokenizer and model
     tokenizer = AutoTokenizer.from_pretrained(config['backbone'])
@@ -51,14 +51,14 @@ def main():
     model.to(device)
     
     # Load dataset
-    train_dataset = RouterDataset(config['data']['train_file'], tokenizer, config['training']['max_seq_length'])
-    val_dataset = RouterDataset(config['data']['val_file'], tokenizer, config['training']['max_seq_length'])
+    train_dataset = RouterDataset(config['data']['train_file'], tokenizer, config['train']['max_seq_length'])
+    val_dataset = RouterDataset(config['data']['val_file'], tokenizer, config['train']['max_seq_length'])
 
-    train_loader = DataLoader(train_dataset, batch_size=config['training']['batch_size'], shuffle=True)
-    val_loader = DataLoader(val_dataset, batch_size=config['training']['batch_size'])
+    train_loader = DataLoader(train_dataset, batch_size=config['train']['batch_size'], shuffle=True)
+    val_loader = DataLoader(val_dataset, batch_size=config['train']['batch_size'])
 
     # Prepare trainer
-    config['training']['steps_per_epoch'] = len(train_loader)
+    config['train']['steps_per_epoch'] = len(train_loader)
     trainer = RouterTrainer(model, config, device)
 
     # Train
@@ -74,8 +74,7 @@ if __name__ == "__main__":
         # 仅当在 Colab 或 Jupyter 环境下运行时 mock sys.argv
         if 'google.colab' in sys.modules:
             sys.argv = ['train_router.py', '--config', '/content/dynamo/configs/router.yaml']
-        
-        args = parse_args()
+
         main()
     except Exception as e:
         print(f"[FATAL] Uncaught exception: {e}")

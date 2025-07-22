@@ -15,6 +15,13 @@
       "console": "integratedTerminal"
     },
     {
+      "name": "train router", 
+      "type": "python",
+      "request": "launch",
+      "program": "${workspaceFolder}/router/train_router.py",
+      "console": "integratedTerminal"
+    },
+    {
       "name": "clean dataset", 
       "type": "python",
       "request": "launch",
