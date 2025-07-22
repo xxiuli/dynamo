@@ -34,12 +34,12 @@ data:
   val_file: ${DATA_ROOT}/single_lora_data/glue_mnli_validation_matched_07052025_1527.json
 
 output:
-  save_dir: ${DRIVE_ROOT}/DynamoRouterCheckpoints/adapter_mnli
+  save_dir: ${DRIVE_ROOT}/DynamoRouterCheckpoints/
   save_best_only: true
   monitor_metric: val_acc  # 自动对齐 early_stopping
   save_lora_adapter: true
   save_task_head: true
-  log_dir: ${DRIVE_ROOT}/DynamoRouterLogs/adapter_mnli
+  log_dir: ${DRIVE_ROOT}/DynamoRouterLogs/
 
 # ========= 调试专用 =========
 # 调试时EPOCH可改为: num_epochs: 1

@@ -103,7 +103,7 @@ class BaseTrainer(ABC):
             
             avg_train_loss = total_loss / len(train_loader)
 
-            if not skip_evaluation:
+            if not skip_evaluation: # 不跳过评估（实跑）
 
                 val_metrics = self.evaluate(val_loader, epoch)
                 val_loss = val_metrics.get('val_loss', None)
@@ -131,7 +131,7 @@ class BaseTrainer(ABC):
 
                 if not self.save_best_only or is_better:
                     self.best_metric = current_metric
-                    save_model(self, epoch=epoch)
+                    save_model(self, final=True, epoch=epoch) # ✅ 标记为final，保存到 adapter_{task_name}/
 
                 self.writer.add_scalar('Loss/Train', avg_train_loss, epoch)
                 self.writer.add_scalar('Loss/Validation', val_loss, epoch)
@@ -139,7 +139,9 @@ class BaseTrainer(ABC):
             else:
                 print(f"[DEBUG] Skipped evaluation at epoch {epoch+1}.")
             
-        save_model(self, final=True)
+        # ✅ 如果不是只保存最优模型，可以再保存最后一轮
+        if not self.save_best_only:
+            save_model(self, final=True)
         
         self.writer.close()
 
