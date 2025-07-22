@@ -6,10 +6,10 @@ import os
 import torch
 
 class CustomClassificationModel(nn.Module):
-    def __init__(self, backbone_name, num_labels, ignore_mismatched_sizes=False):
+    def __init__(self, backbone_dir, num_labels, ignore_mismatched_sizes=False):
         super().__init__()
         self.backbone = AutoModel.from_pretrained(
-            backbone_name,
+            backbone_dir,
             ignore_mismatched_sizes=ignore_mismatched_sizes
             )
         self.config = self.backbone.config #LoRA 的时候，PeftModel 体系会尝试访问 .config.use_return_dict
@@ -54,27 +54,41 @@ class CustomClassificationModel(nn.Module):
     
     def save_pretrained(self, save_directory):
         os.makedirs(save_directory, exist_ok=True)
+
         # 保存 backbone（如 RobertaModel）
         self.backbone.save_pretrained(save_directory)
+
         # 另外保存你自定义的 head
         torch.save(self.head.state_dict(), os.path.join(save_directory, "head.pth"))
+        
         # 保存 config
         with open(os.path.join(save_directory, "config.json"), "w") as f:
             f.write(self.config.to_json_string())
 
     @classmethod #告诉 Python 这个方法是类方法，不是实例方法
-    def from_pretrained(cls, load_directory):
+    def from_pretrained(cls, load_directory, num_labels=None):
         # 1. 加载 backbone（包括 config）
+
         backbone = AutoModel.from_pretrained(load_directory)
         config = backbone.config
-        num_labels = config.num_labels  # 从 config 中读
 
-        # 2. 构建模型
-        model = cls(backbone_name=load_directory, num_labels=num_labels)
+        # 尝试从 config 中读 num_labels
+        config_num_labels = getattr(config, 'num_labels', None)
 
-        # 3. 加载自定义的分类头
+        # 使用优先级：外部传入 > config.json > fallback
+        effective_num_labels = num_labels if num_labels is not None else (config_num_labels or 2)
+
+        # 2. 构建模型（用来自定义的分类头维度）
+        model = cls(backbone_dir=load_directory, num_labels=effective_num_labels)
+
+        # 3. 加载自定义 Head
         head_path = os.path.join(load_directory, "head.pth")
-        model.head.load_state_dict(torch.load(head_path, map_location='cpu'))
+        model.head.load_state_dict(torch.load(head_path, map_location="cpu"))
+
+        # ✅ 5. 加载 LoRA adapter 权重（Q/V 层）
+        adapter_weights_path = os.path.join(load_directory, "adapter_model.safetensors")
+        if os.path.exists(adapter_weights_path):
+            model.load_state_dict(torch.load(adapter_weights_path, map_location="cpu"), strict=False)
 
         return model
 

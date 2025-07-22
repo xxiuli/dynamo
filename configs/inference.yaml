@@ -1,0 +1,66 @@
+# ========= 路由器模型配置 =========
+router:
+  task_type: classification
+  config_path: configs/router.yaml
+  checkpoint_path: ${DRIVE_ROOT}/DynamoRouterCheckpoints/router
+  tokenizer: roberta-base
+  backbone: roberta-base
+  hidden_size: 768
+  num_task: 7
+  temperature: 1.0
+
+# ========= 任务映射配置 =========
+tasks:
+  sst2:
+    task_id: 0
+    task_type: classification
+    config_path: configs/single_lora_sst2.yaml
+    adapter_path: ${DRIVE_ROOT}/DynamoRouterCheckpoints/adapter_sst2
+    tokenizer: cardiffnlp/twitter-roberta-base-sentiment
+    class_names: ['Negative', 'Positive']
+
+  mnli:
+    task_id: 1
+    task_type: classification
+    config_path: configs/single_lora_mnli.yaml
+    adapter_path: ${DRIVE_ROOT}/DynamoRouterCheckpoints/adapter_mnli
+    tokenizer: roberta-large-mnli
+    class_names: ['entailment', 'neutral', 'contradiction']
+
+  qqp:
+    task_id: 2
+    task_type: classification
+    config_path: configs/single_lora_qqp.yaml
+    adapter_path: ${DRIVE_ROOT}/DynamoRouterCheckpoints/adapter_qqp
+    tokenizer: bert-base-uncased
+    class_names: ['Not Duplicate', 'Duplicate']
+
+  agnews:
+    task_id: 3
+    task_type: classification
+    config_path: configs/single_lora_agnews.yaml
+    adapter_path: ${DRIVE_ROOT}/DynamoRouterCheckpoints/adapter_agnews
+    tokenizer: distilbert-base-uncased
+    class_names: ['World', 'Sports', 'Business', 'Sci/Tech']
+
+  squad:
+    task_id: 4
+    task_type: qa
+    config_path: configs/single_lora_squad.yaml
+    adapter_path: ${DRIVE_ROOT}/DynamoRouterCheckpoints/adapter_squad
+    tokenizer: dslim/bert-base-NER
+
+  xsum:
+    task_id: 5
+    task_type: summarization
+    config_path: configs/single_lora_xsum.yaml
+    adapter_path: ${DRIVE_ROOT}/DynamoRouterCheckpoints/adapter_xsum
+    tokenizer: google/pegasus-xsum
+
+  conll03:
+    task_id: 6
+    task_type: classification
+    config_path: configs/single_lora_conll03.yaml
+    adapter_path: ${DRIVE_ROOT}/DynamoRouterCheckpoints/adapter_conll03
+    tokenizer: dslim/bert-base-NER
+

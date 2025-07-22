@@ -68,35 +68,39 @@ def save_model(trainer, final=False, epoch=None):
         )
         os.makedirs(path, exist_ok=True)
 
-        # 保存 config
-        with open(os.path.join(path, 'config.yaml'), 'w') as f:
-            yaml.dump(trainer.config, f)
-
-        # 保存模型
-        if hasattr(trainer.model, "save_pretrained"):
-            # 保存 LoRA adapter 或 HuggingFace 模型
-            trainer.model.save_pretrained(path)
+        # ✅ 如果模型有 HuggingFace config（例如 AutoModel / PeftModel / CustomClassificationModel）
+        if hasattr(trainer.model, 'config') and hasattr(trainer.model.config, 'to_json_string'):
+            config_path = os.path.join(path, 'config.json')
+            with open(config_path , 'w') as f:
+                f.write(trainer.model.config.to_json_string())
+            print(f"[INFO] HuggingFace config saved to {config_path}")
         else:
-            # 保存普通 PyTorch 模型（如 RouterClassifier）
-            torch.save(trainer.model.state_dict(), os.path.join(path, "pytorch_model.bin"))
-            print(f"[INFO] PyTorch model weights saved to {path}/pytorch_model.bin")
+            print(f"[INFO] Skipped saving HuggingFace config (no .config or not serializable)")
 
-        # 保存 tokenizer（如果有）
+        # ✅ 模型保存（支持 HuggingFace、LoRA、RouterClassifier）
+        if hasattr(trainer.model, "save_pretrained"):
+            trainer.model.save_pretrained(path)
+            print(f"[INFO] Model saved using save_pretrained() to {path}")
+        else:
+            # 兜底方案：保存权重
+            model_path = os.path.join(path, "pytorch_model.bin")
+            torch.save(trainer.model.state_dict(), model_path)
+            print(f"[INFO] Model weights saved to {model_path}")
+
+        # ✅ 保存自定义 Head（如果有）
+        if hasattr(trainer.model, "head"):
+            head_path = os.path.join(path, "head.pth")
+            torch.save(trainer.model.head.state_dict(), head_path)
+            print(f"[INFO] Head weights saved to {head_path}")
+        else:
+            print(f"[INFO] No custom head to save")
+
+        # ✅ 保存 tokenizer（如果有）
         if trainer.tokenizer and hasattr(trainer.tokenizer, "save_pretrained"):
             trainer.tokenizer.save_pretrained(path)
-
-        # 保存 base model（只保存一次）
-        if final and hasattr(trainer.model, 'base_model'):
-            base_path = os.path.join(trainer.save_dir, 'base')
-            if not os.path.exists(os.path.join(base_path, 'pytorch_model.bin')):
-                try:
-                    os.makedirs(base_path, exist_ok=True)
-                    trainer.model.base_model.save_pretrained(base_path)
-                    print(f"[INFO] Base model saved to {base_path}")
-                except Exception as e:
-                    print(f"[WARNING] Failed to save base model: {e}")
-            else:
-                print(f"[INFO] Base model already exists at {base_path}, skipping save.")
+            print(f"[INFO] Tokenizer saved to {path}")
+        else:
+            print(f"[INFO] No tokenizer saved")
 
     except Exception as e:
         print(f"[ERROR] Failed to save model: {e}")
