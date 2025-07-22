@@ -34,8 +34,8 @@ data:
 
 # ========= 输出配置 =========
 output:
-  save_dir: ${DRIVE_ROOT}/DynamoRouterCheckpoints/router
-  log_dir: ${DRIVE_ROOT}/DynamoRouterLogs/router
+  save_dir: ${DRIVE_ROOT}/DynamoRouterCheckpoints/
+  log_dir: ${DRIVE_ROOT}/DynamoRouterLogs/
   save_best_only: true
   monitor_metric: val_acc
   save_router_model: true   # 自定义字段，保存 router.pth
