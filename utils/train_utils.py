@@ -72,11 +72,18 @@ def save_model(trainer, final=False, epoch=None):
         with open(os.path.join(path, 'config.yaml'), 'w') as f:
             yaml.dump(trainer.config, f)
 
-        # 保存 LoRA adapter
-        trainer.model.save_pretrained(path)
+        # 保存模型
+        if hasattr(trainer.model, "save_pretrained"):
+            # 保存 LoRA adapter 或 HuggingFace 模型
+            trainer.model.save_pretrained(path)
+        else:
+            # 保存普通 PyTorch 模型（如 RouterClassifier）
+            torch.save(trainer.model.state_dict(), os.path.join(path, "pytorch_model.bin"))
+            print(f"[INFO] PyTorch model weights saved to {path}/pytorch_model.bin")
 
-        # 保存 tokenizer
-        trainer.tokenizer.save_pretrained(path)
+        # 保存 tokenizer（如果有）
+        if trainer.tokenizer and hasattr(trainer.tokenizer, "save_pretrained"):
+            trainer.tokenizer.save_pretrained(path)
 
         # 保存 base model（只保存一次）
         if final and hasattr(trainer.model, 'base_model'):
