@@ -87,11 +87,14 @@ def save_model(trainer, final=False, epoch=None):
             torch.save(trainer.model.state_dict(), model_path)
             print(f"[INFO] Model weights saved to {model_path}")
 
-        # ✅ 保存自定义 Head（如果有）
+        # ✅ 保存自定义 Head（如果有）（支持 head / classifier）
         if hasattr(trainer.model, "head"):
             head_path = os.path.join(path, "head.pth")
             torch.save(trainer.model.head.state_dict(), head_path)
             print(f"[INFO] Head weights saved to {head_path}")
+        elif hasattr(trainer.model, "classifier"):
+            torch.save(trainer.model.classifier.state_dict(), os.path.join(path, "classifier_head.pth"))
+            print(f"[INFO] Classifier head weights saved to {path}/classifier_head.pth")
         else:
             print(f"[INFO] No custom head to save")
 
