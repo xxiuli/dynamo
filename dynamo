@@ -1,0 +1,3 @@
+#!/bin/bash
+# ./dynamo "today is a good day"
+python inference_cli.py "$@"

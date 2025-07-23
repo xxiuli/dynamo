@@ -1,3 +1,4 @@
+#dynamo.yaml
 # ========= 路由器模型配置 =========
 router:
   task_type: classification
