@@ -15,6 +15,17 @@
       "console": "integratedTerminal"
     },
     {
+      "name": "inference_cli", 
+      "type": "python",
+      "request": "launch",
+      "program": "${workspaceFolder}/inference_cli.py",
+      "args": [
+        "--config", "configs/dynamo.yaml",
+        "It is a good day!"
+      ],
+      "console": "integratedTerminal"
+    },
+    {
       "name": "train router", 
       "type": "python",
       "request": "launch",

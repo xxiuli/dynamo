@@ -40,7 +40,9 @@ class CustomTokenClassificationModel(nn.Module):
     def save_pretrained(self, save_directory):
         os.makedirs(save_directory, exist_ok=True)
         self.backbone.save_pretrained(save_directory)
+
         torch.save(self.head.state_dict(), os.path.join(save_directory, "head.pth"))
+
         with open(os.path.join(save_directory, "config.json"), "w") as f:
             f.write(self.config.to_json_string())
 
@@ -51,7 +53,9 @@ class CustomTokenClassificationModel(nn.Module):
         effective_num_labels = num_labels if num_labels is not None else (config_num_labels or 2)
 
         model = cls(backbone_dir=load_directory, num_labels=effective_num_labels)
+
         head_path = os.path.join(load_directory, "head.pth")
+        
         model.head.load_state_dict(torch.load(head_path, map_location="cpu"))
 
         # ✅ 加载 LoRA adapter（可选）

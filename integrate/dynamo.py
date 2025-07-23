@@ -71,8 +71,7 @@ def preprocess_data(text: str, task_type: str, tokenizer):
         raise ValueError(f"[ERROR] Unknown task type: {task_type}")
 
 class Dynamo:
-    def __init__(self, config_path: str):
-        config = load_config(config_path)
+    def __init__(self, config: str):
         self.router, self.tokenizer = load_router(config["router"])
         self.tasks = config["tasks"]
         self.target_adapters = get_all_adapters(self.tasks)

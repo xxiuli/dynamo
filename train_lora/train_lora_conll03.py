@@ -21,7 +21,7 @@ from trainers.trainer_cls_token import TokenClassificationTrainer
 from utils.setting_utils import parse_args, load_config, apply_path_placeholders
 from utils.train_utils import set_seed, print_trainable_params, freeze_base_model
 from utils.task_map import get_task_info
-from model.custom_cls_model import CustomClassificationModel
+from model.custom_token_model import CustomTokenClassificationModel
 
 def load_label_map(path):
     with open(path, 'r', encoding='utf-8') as f:
@@ -31,7 +31,7 @@ def load_tokenizer_and_model(config, label2id):
     id2label = {v: k for k, v in label2id.items()}
     tokenizer = AutoTokenizer.from_pretrained(config['backbone_model'])
     
-    model = CustomClassificationModel(
+    model = CustomTokenClassificationModel(
         config['backbone_model'],
         num_labels=len(label2id)
     )

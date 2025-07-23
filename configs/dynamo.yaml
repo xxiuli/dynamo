@@ -60,7 +60,7 @@ tasks:
 
   conll03:
     task_id: 6
-    task_type: classification
+    task_type: ner
     config_path: configs/single_lora_conll03.yaml
     adapter_path: ${DRIVE_ROOT}/DynamoRouterCheckpoints/adapter_conll03
     tokenizer: dslim/bert-base-NER
