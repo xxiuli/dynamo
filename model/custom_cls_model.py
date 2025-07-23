@@ -43,8 +43,8 @@ class CustomClassificationModel(nn.Module):
         if labels is not None:
             loss_fn = nn.CrossEntropyLoss(ignore_index=-100) #需要展平
             # 经SOFTMAX 归一化
-            # loss = loss_fn(logits.view(-1, logits.size(-1)), labels.view(-1))
-            loss = loss_fn(logits, labels)
+            loss = loss_fn(logits.view(-1, logits.size(-1)), labels.view(-1))
+            # loss = loss_fn(logits, labels)
         
         return SequenceClassifierOutput(
             loss=loss,
