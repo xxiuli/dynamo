@@ -48,5 +48,6 @@ class SingleTextClassificationDataset(Dataset):
         return {
             'input_ids': encoding['input_ids'].squeeze(0),
             'attention_mask': encoding['attention_mask'].squeeze(0),
-            'labels': item['label']  
+            'labels': torch.tensor(item['label'], dtype=torch.long)
+            # 'labels': item['label']  
         }

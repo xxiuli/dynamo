@@ -32,10 +32,10 @@ class CustomClassificationModel(nn.Module):
 
         # Step 2: 拿到 [CLS] token 向量（第一个位置）
         sequence_output = outputs.last_hidden_state           # [batch_size, seq_len, hidden_size] 
-
+        pooled_output = sequence_output[:, 0, :]  # ✅ 取 [CLS] 向量
         # Step 3: 输入到分类头（Head 会自动调用它的 forward）
         # logits = 模型输出的每个类别的原始分数（未归一化）
-        logits = self.head(sequence_output)             # [batch_size, seq_len, num_labels]     
+        logits = self.head(pooled_output)             # [batch_size, seq_len, num_labels]     
 
         loss = None
 
@@ -43,8 +43,8 @@ class CustomClassificationModel(nn.Module):
         if labels is not None:
             loss_fn = nn.CrossEntropyLoss(ignore_index=-100) #需要展平
             # 经SOFTMAX 归一化
-            loss = loss_fn(logits.view(-1, logits.size(-1)), labels.view(-1))
-            # loss = loss_fn(logits, labels)
+            # loss = loss_fn(logits.view(-1, logits.size(-1)), labels.view(-1))
+            loss = loss_fn(logits, labels)
         
         return SequenceClassifierOutput(
             loss=loss,
