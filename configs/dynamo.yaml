@@ -3,7 +3,7 @@
 router:
   task_type: classification
   config_path: configs/router.yaml
-  checkpoint_path: ${DRIVE_ROOT}/DynamoRouterCheckpoints/router
+  checkpoint_path: ${DRIVE_ROOT}/adapter_router
   tokenizer: roberta-base
   backbone: roberta-base
   hidden_size: 768
@@ -16,7 +16,7 @@ tasks:
     task_id: 0
     task_type: classification
     config_path: configs/single_lora_sst2.yaml
-    adapter_path: ${DRIVE_ROOT}/DynamoRouterCheckpoints/adapter_sst2
+    adapter_path: ${DRIVE_ROOT}/adapter_sst2
     tokenizer: cardiffnlp/twitter-roberta-base-sentiment
     class_names: ['Negative', 'Positive']
 
@@ -24,7 +24,7 @@ tasks:
     task_id: 1
     task_type: classification
     config_path: configs/single_lora_mnli.yaml
-    adapter_path: ${DRIVE_ROOT}/DynamoRouterCheckpoints/adapter_mnli
+    adapter_path: ${DRIVE_ROOT}/adapter_mnli
     tokenizer: roberta-large-mnli
     class_names: ['entailment', 'neutral', 'contradiction']
 
@@ -32,7 +32,7 @@ tasks:
     task_id: 2
     task_type: classification
     config_path: configs/single_lora_qqp.yaml
-    adapter_path: ${DRIVE_ROOT}/DynamoRouterCheckpoints/adapter_qqp
+    adapter_path: ${DRIVE_ROOT}/adapter_qqp
     tokenizer: bert-base-uncased
     class_names: ['Not Duplicate', 'Duplicate']
 
@@ -40,7 +40,7 @@ tasks:
     task_id: 3
     task_type: classification
     config_path: configs/single_lora_agnews.yaml
-    adapter_path: ${DRIVE_ROOT}/DynamoRouterCheckpoints/adapter_agnews
+    adapter_path: ${DRIVE_ROOT}/adapter_agnews
     tokenizer: distilbert-base-uncased
     class_names: ['World', 'Sports', 'Business', 'Sci/Tech']
 
@@ -48,20 +48,20 @@ tasks:
     task_id: 4
     task_type: qa
     config_path: configs/single_lora_squad.yaml
-    adapter_path: ${DRIVE_ROOT}/DynamoRouterCheckpoints/adapter_squad
+    adapter_path: ${DRIVE_ROOT}/adapter_squad
     tokenizer: dslim/bert-base-NER
 
   xsum:
     task_id: 5
     task_type: summarization
     config_path: configs/single_lora_xsum.yaml
-    adapter_path: ${DRIVE_ROOT}/DynamoRouterCheckpoints/adapter_xsum
+    adapter_path: ${DRIVE_ROOT}/adapter_xsum
     tokenizer: google/pegasus-xsum
 
   conll03:
     task_id: 6
     task_type: ner
     config_path: configs/single_lora_conll03.yaml
-    adapter_path: ${DRIVE_ROOT}/DynamoRouterCheckpoints/adapter_conll03
+    adapter_path: ${DRIVE_ROOT}/adapter_conll03
     tokenizer: dslim/bert-base-NER
 

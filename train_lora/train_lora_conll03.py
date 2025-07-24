@@ -13,7 +13,7 @@ import json
 import torch
 
 from torch.utils.data import DataLoader
-from transformers import AutoTokenizer, AutoModelForTokenClassification
+from transformers import AutoTokenizer
 from peft import get_peft_model, LoraConfig, TaskType
 
 from utils.train_utils import set_seed, print_trainable_params, freeze_base_model

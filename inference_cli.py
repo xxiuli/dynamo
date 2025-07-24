@@ -1,6 +1,7 @@
 import argparse
 from utils.setting_utils import load_config
 from integrate.dynamo import Dynamo
+from utils.setting_utils import apply_path_dynamo
 
 def parse_args():
     parser = argparse.ArgumentParser(description="DynamoRouter Inference CLI")
@@ -11,6 +12,8 @@ def parse_args():
 def main():
    args = parse_args()
    dynamo_cfg = load_config(args.config)
+
+   apply_path_dynamo(dynamo_cfg)
    
    # 初始化 Dynamo 推理器
    dynamo = Dynamo(dynamo_cfg)

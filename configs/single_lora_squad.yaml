@@ -20,7 +20,7 @@ train:
   seed: 42
   batch_size: 4         # QA类任务可以适当减小batch
   learning_rate: 1e-5    # 通常QA比分类任务学习率更小
-  num_epochs: 8
+  num_epochs: 5
   # num_epochs: 1
   max_seq_length: 384    # QA一般较长 max_seq_length 要控制在统一范围（比如都不超过 512）
   optimizer: adamw
@@ -32,7 +32,7 @@ train:
 # ========= 早停策略（可选）=========
 early_stopping:
   enabled: true
-  patience: 5
+  patience: 3
   monitor: val_exact_match  # best model
   mode: max          # val_loss是min，val_acc是max, val_f1是max
 

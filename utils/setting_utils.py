@@ -45,3 +45,26 @@ def apply_path_placeholders(config):
         config['data']['label2id_file'] = replace_path(config['data']['label2id_file'])
     
     return config
+
+def apply_path_dynamo(config):
+    #第二个参数是FALLBACK
+    # drive_root = os.environ.get("DRIVE_ROOT", "/content/drive/MyDrive")
+    drive_root = os.environ.get("DRIVE_ROOT", os.path.abspath("DynamoRouterCheckpoints"))      # 本地的 ./test
+
+    def replace_path(value):
+        if isinstance(value, str):
+            replaced = value.replace("${DRIVE_ROOT}", drive_root)
+            # ✅ Windows 修复：去除非法路径开头的 '/'（例如 '/C:/Users/...' -> 'C:/Users/...')
+            if os.name == "nt" and replaced.startswith("/") and ":" in replaced:
+                replaced = replaced[1:]
+            return replaced
+        return value
+    
+    
+    config['router']['checkpoint_path'] = replace_path(config['router']['checkpoint_path'])
+    
+    for task_name, task_cfg in config['tasks'].items():
+       if 'adapter_path' in task_cfg:
+        task_cfg['adapter_path'] = replace_path(task_cfg['adapter_path'])
+    
+    return config
