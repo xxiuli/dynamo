@@ -15,14 +15,32 @@
       "console": "integratedTerminal"
     },
     {
+      "name": "download_mixtest_set", 
+      "type": "python",
+      "request": "launch",
+      "program": "${workspaceFolder}/data/scripts/get_mix_data.py",
+      "args": [
+        "--yaml_path", "data/download_configs/test_sampling.yaml"
+      ],
+      "console": "integratedTerminal"
+    },
+    {
       "name": "inference_cli", 
       "type": "python",
       "request": "launch",
       "program": "${workspaceFolder}/inference_cli.py",
       "args": [
         "--config", "configs/dynamo.yaml",
-        "It is a good day!"
+        "--input_json", "data/end2end_mix/testset.json",
+        "--output_json", "results/inference_results.jsonl"
       ],
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "download_model", 
+      "type": "python",
+      "request": "launch",
+      "program": "${workspaceFolder}/data/scripts/download_backbones.py",
       "console": "integratedTerminal"
     },
     {

@@ -49,22 +49,26 @@ def apply_path_placeholders(config):
 def apply_path_dynamo(config):
     #第二个参数是FALLBACK
     # drive_root = os.environ.get("DRIVE_ROOT", "/content/drive/MyDrive")
-    drive_root = os.environ.get("DRIVE_ROOT", os.path.abspath("DynamoRouterCheckpoints"))      # 本地的 ./test
+    drive_root = os.environ.get("DRIVE_ROOT", os.path.abspath("DynamoRouterCheckpoints"))
 
     def replace_path(value):
         if isinstance(value, str):
             replaced = value.replace("${DRIVE_ROOT}", drive_root)
-            # ✅ Windows 修复：去除非法路径开头的 '/'（例如 '/C:/Users/...' -> 'C:/Users/...')
             if os.name == "nt" and replaced.startswith("/") and ":" in replaced:
                 replaced = replaced[1:]
             return replaced
         return value
-    
-    
+
+    # 替换 router.checkpoint_path
     config['router']['checkpoint_path'] = replace_path(config['router']['checkpoint_path'])
-    
+
+    # 替换每个 task 的 adapter_path 和 model_paths
     for task_name, task_cfg in config['tasks'].items():
-       if 'adapter_path' in task_cfg:
-        task_cfg['adapter_path'] = replace_path(task_cfg['adapter_path'])
-    
+        if 'adapter_path' in task_cfg:
+            task_cfg['adapter_path'] = replace_path(task_cfg['adapter_path'])
+
+        if 'model_paths' in task_cfg:
+            for key in task_cfg['model_paths']:
+                task_cfg['model_paths'][key] = replace_path(task_cfg['model_paths'][key])
+
     return config

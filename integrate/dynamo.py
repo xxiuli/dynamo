@@ -1,10 +1,13 @@
+from model.custom_token_model import CustomTokenClassificationModel
 from utils.setting_utils import load_config
-from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
+from transformers import AutoModelForQuestionAnswering, AutoTokenizer, AutoModelForSeq2SeqLM
 from router.router_classifier import RouterClassifier
 from model.custom_cls_model import CustomClassificationModel
 from peft import PeftModel
 import torch
 import torch.nn.functional as F
+from utils.setting_utils import apply_path_placeholders
+import os
 
 def load_router(router_cfg):
     # 使用 router.tokenizer 加载 tokenizer
@@ -18,9 +21,11 @@ def load_router(router_cfg):
 def get_all_adapters(tasks, device):
     target_adapters = {}
     tokenizer_cache = {}
-
+    
     for task_name, task_cfg in tasks.items():
         adapter_cfg = load_config(task_cfg['config_path'])
+        adapter_cfg = apply_path_placeholders(adapter_cfg)
+
         trained_lora_dir = task_cfg['adapter_path']
 
         # tokenizer 缓存复用
@@ -41,19 +46,39 @@ def get_all_adapters(tasks, device):
 
 def load_adapter_model(task_cfg, adapter_cfg, device):
     task_type = task_cfg['task_type'].lower()
-    model_dir = task_cfg['adapter_path']
 
     if task_type == 'classification':
         # ${DRIVE_ROOT}/DynamoRouterCheckpoints/adapter_agnews
         model = CustomClassificationModel.from_pretrained(
-            model_dir,
+            task_cfg['model_paths'],
             num_labels=adapter_cfg['num_labels']
             ).to(device)
         return model
+    
+    elif task_type == 'ner':
+        model = CustomTokenClassificationModel.from_pretrained(
+            task_cfg['model_paths'],
+            num_labels=adapter_cfg['num_labels']
+        ).to(device)
+        return model
 
-    elif task_type in ['qa', 'summarization']:
-        base_model = AutoModelForSeq2SeqLM.from_pretrained(model_dir).to(device)
-        model = PeftModel.from_pretrained(base_model, model_dir).to(device)
+    elif task_type == 'qa':
+        # 问答任务：使用 AutoModelForQuestionAnswering
+        base_model = AutoModelForQuestionAnswering.from_pretrained(
+            task_cfg['adapter_path']
+        ).to(device)
+
+        model = PeftModel.from_pretrained(base_model, task_cfg['adapter_path']).to(device)
+        model.eval()
+        return model
+
+    elif task_type == 'summarization':
+        # 摘要任务：使用 Seq2Seq 模型架构
+        base_model = AutoModelForSeq2SeqLM.from_pretrained(
+            task_cfg['adapter_path']
+        ).to(device)
+
+        model = PeftModel.from_pretrained(base_model, task_cfg['adapter_path']).to(device)
         model.eval()
         return model
     else:
@@ -69,17 +94,31 @@ def preprocess_data(text: str, task_type: str, tokenizer):
         return tokenizer(text, return_tensors="pt")
     else:
         raise ValueError(f"[ERROR] Unknown task type: {task_type}")
+    
+def build_path(task_name, task_cfg):
+    adapter_dir = task_cfg['adapter_path']
+    paths = {
+        "config": os.path.join(adapter_dir, "config.json"),
+        "model": os.path.join(adapter_dir, "pytorch_model.bin"),
+        "head": os.path.join(adapter_dir, "head.pth"),
+        "adapter_weight": os.path.join(adapter_dir, f"adapter_{task_name}.safetensors"),
+    }
+    return paths
 
 class Dynamo:
     def __init__(self, config: str):
-        self.router, self.tokenizer = load_router(config["router"])
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.tokenizer, self.router = load_router(config["router"])
         self.tasks = config["tasks"]
-        self.target_adapters = get_all_adapters(self.tasks)
+        self.target_adapters = get_all_adapters(self.tasks, self.device)
 
     def predict(self, text: str, top_k: int = 3) -> dict:
         # Step 1: 用 Router 分发任务
         inputs = self.tokenizer(text, return_tensors='pt')
-        logits = self.router(**inputs)
+        input_ids = inputs['input_ids'].to(self.device)
+        attention_mask = inputs['attention_mask'].to(self.device)
+
+        logits = self.router(input_ids=input_ids, attention_mask=attention_mask)    # 🛠️ 只传 input_ids 给 Router
         probs = F.softmax(logits, dim=-1)
 
         task_idx = torch.argmax(probs, dim=1).item()
@@ -94,7 +133,7 @@ class Dynamo:
 
         # 打印 Router logits 和概率
         print("\n📊 Router logits:", logits.tolist())
-        print("📈 Router softmax:", probs.tolist())
+        print("📈 Router softmax:", probs.tolist()) 
 
          # 输出 Top-k 路由候选
         top_probs, top_indices = probs[0].topk(k=min(top_k, len(self.tasks)))
@@ -114,17 +153,26 @@ class Dynamo:
         task_type = task_cfg["task_type"].lower()
         task_inputs = preprocess_data(text, task_type, adapter_tokenizer)
         task_inputs = {k: v.to(self.device) for k, v in task_inputs.items()}
+        print(f"[🧪] 输入模型的字段: {list(task_inputs.keys())}")
 
-        # Step 3: 模型推理
+
+        # Step 3: 模型推理 # Step 4: 解码结果
         with torch.no_grad():
-            outputs = adapter_model(**task_inputs)
-
-        # Step 4: 解码结果
-        if task_type == "classification":
             if task_type == "summarization":
-                pred_ids = adapter_model.generate(**task_inputs)
-                pred = adapter_tokenizer.decode(pred_ids[0], skip_special_tokens=True)
-
+                print("[🧠] 使用 generate 进行 summarization 推理")
+                for key in ["decoder_input_ids", "decoder_inputs_embeds"]:
+                    if key in task_inputs:
+                        print(f"[⚠️] 移除冲突字段：{key}")
+                        del task_inputs[key]
+                pred_ids = adapter_model.generate(
+                    input_ids=task_inputs["input_ids"],
+                    attention_mask=task_inputs.get("attention_mask"),
+                    max_length=60,
+                    num_beams=4,
+                    early_stopping=True
+                )
+                pred = adapter_tokenizer.decode(pred_ids[0], skip_special_tokens=True).strip()
+            
             elif task_type == "qa":
                 outputs = adapter_model(**task_inputs)
                 start_idx = torch.argmax(outputs.start_logits, dim=1)
@@ -136,9 +184,17 @@ class Dynamo:
                 outputs = adapter_model(**task_inputs)
                 pred = torch.argmax(outputs.logits, dim=-1).item()
 
+            
+            elif task_type == "ner":
+                outputs = adapter_model(**task_inputs)  # logits: [1, seq_len, num_labels]
+                predicted_ids = torch.argmax(outputs, dim=-1)  # [1, seq_len]
+                tokens = adapter_tokenizer.convert_ids_to_tokens(task_inputs["input_ids"][0])
+                labels = [adapter_model.config.id2label[idx.item()] for idx in predicted_ids[0]]
+                
+                pred = list(zip(tokens, labels))  # token-label pair
+
             else:
                 pred = "Unsupported task type"
-
 
         return {
             "text": text,

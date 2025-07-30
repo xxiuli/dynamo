@@ -19,6 +19,11 @@ tasks:
     adapter_path: ${DRIVE_ROOT}/adapter_sst2
     tokenizer: cardiffnlp/twitter-roberta-base-sentiment
     class_names: ['Negative', 'Positive']
+    model_paths:
+      config: ${DRIVE_ROOT}/adapter_sst2/config.json
+      model: ${DRIVE_ROOT}/adapter_sst2/pytorch_model.bin
+      head: ${DRIVE_ROOT}/adapter_sst2/head.pth
+      adapter_weight: ${DRIVE_ROOT}/adapter_sst2/adapter_model.safetensors
 
   mnli:
     task_id: 1
@@ -27,6 +32,11 @@ tasks:
     adapter_path: ${DRIVE_ROOT}/adapter_mnli
     tokenizer: roberta-large-mnli
     class_names: ['entailment', 'neutral', 'contradiction']
+    model_paths:
+      config: ${DRIVE_ROOT}/adapter_mnli/config.json
+      model: ${DRIVE_ROOT}/adapter_mnli/pytorch_model.bin
+      head: ${DRIVE_ROOT}/adapter_mnli/head.pth
+      adapter_weight: ${DRIVE_ROOT}/adapter_mnli/adapter_model.safetensors
 
   qqp:
     task_id: 2
@@ -35,6 +45,11 @@ tasks:
     adapter_path: ${DRIVE_ROOT}/adapter_qqp
     tokenizer: bert-base-uncased
     class_names: ['Not Duplicate', 'Duplicate']
+    model_paths:
+      config: ${DRIVE_ROOT}/adapter_qqp/config.json
+      model: ${DRIVE_ROOT}/adapter_qqp/pytorch_model.bin
+      head: ${DRIVE_ROOT}/adapter_qqp/head.pth
+      adapter_weight: ${DRIVE_ROOT}/adapter_qqp/adapter_model.safetensors
 
   agnews:
     task_id: 3
@@ -43,6 +58,11 @@ tasks:
     adapter_path: ${DRIVE_ROOT}/adapter_agnews
     tokenizer: distilbert-base-uncased
     class_names: ['World', 'Sports', 'Business', 'Sci/Tech']
+    model_paths:
+      config: ${DRIVE_ROOT}/adapter_agnews/config.json
+      model: ${DRIVE_ROOT}/adapter_agnews/pytorch_model.bin
+      head: ${DRIVE_ROOT}/adapter_agnews/head.pth
+      adapter_weight: ${DRIVE_ROOT}/adapter_agnews/adapter_model.safetensors
 
   squad:
     task_id: 4
@@ -50,6 +70,10 @@ tasks:
     config_path: configs/single_lora_squad.yaml
     adapter_path: ${DRIVE_ROOT}/adapter_squad
     tokenizer: dslim/bert-base-NER
+    model_paths:
+      config: ${DRIVE_ROOT}/adapter_squad/config.json
+      model: ${DRIVE_ROOT}/adapter_squad/pytorch_model.bin
+      adapter_weight: ${DRIVE_ROOT}/adapter_squad/adapter_model.safetensors
 
   xsum:
     task_id: 5
@@ -57,6 +81,10 @@ tasks:
     config_path: configs/single_lora_xsum.yaml
     adapter_path: ${DRIVE_ROOT}/adapter_xsum
     tokenizer: google/pegasus-xsum
+    model_paths:
+      config: ${DRIVE_ROOT}/adapter_xsum/config.json
+      model: ${DRIVE_ROOT}/adapter_xsum/pytorch_model.bin
+      adapter_weight: ${DRIVE_ROOT}/adapter_xsum/adapter_model.safetensors
 
   conll03:
     task_id: 6
@@ -64,4 +92,8 @@ tasks:
     config_path: configs/single_lora_conll03.yaml
     adapter_path: ${DRIVE_ROOT}/adapter_conll03
     tokenizer: dslim/bert-base-NER
+    model_paths:
+      config: ${DRIVE_ROOT}/adapter_conll03/config.json
+      model: ${DRIVE_ROOT}/adapter_conll03/pytorch_model.bin
+      adapter_weight: ${DRIVE_ROOT}/adapter_conll03/adapter_model.safetensors
 

@@ -1,17 +1,20 @@
-from transformers import AutoModel
+from transformers import AutoModel,AutoConfig
 from heads.classification_head import ClassificationHead
 import torch.nn as nn
 from transformers.modeling_outputs import SequenceClassifierOutput
 import os
 import torch
+from safetensors.torch import load_file  # ✅ 导入 safetensors loader
 
 class CustomClassificationModel(nn.Module):
-    def __init__(self, backbone_dir, num_labels, ignore_mismatched_sizes=False):
+    def __init__(self, backbone, num_labels, ignore_mismatched_sizes=False):
         super().__init__()
-        self.backbone = AutoModel.from_pretrained(
-            backbone_dir,
-            ignore_mismatched_sizes=ignore_mismatched_sizes
-            )
+        self.backbone = backbone
+        # self.backbone = AutoModel.from_pretrained(
+        #     backbone_dir,
+        #     ignore_mismatched_sizes=ignore_mismatched_sizes,
+        #     local_files_only=True  # ✅ 集成时强制使用本地
+        #     )
         self.config = self.backbone.config #LoRA 的时候，PeftModel 体系会尝试访问 .config.use_return_dict
         
         hidden_size = self.backbone.config.hidden_size #从预训练模型 config 中读取输出维度
@@ -56,40 +59,89 @@ class CustomClassificationModel(nn.Module):
     def save_pretrained(self, save_directory):
         os.makedirs(save_directory, exist_ok=True)
 
-        # 保存 backbone（如 RobertaModel）
-        self.backbone.save_pretrained(save_directory)
+        # ✅ 如果是 PEFT 模型，保存 base_model.model
+        if hasattr(self.backbone, "base_model") and hasattr(self.backbone.base_model, "model"):
+            self.backbone.base_model.model.save_pretrained(save_directory)
+            print(f"[✔] PEFT base_model saved to {save_directory}")
+        elif hasattr(self.backbone, "save_pretrained"):
+            self.backbone.save_pretrained(save_directory)
+            print(f"[✔] Backbone saved to {save_directory}")
+        else:
+            print("[⚠️] No valid backbone.save_pretrained found.")
 
         # 另外保存你自定义的 head
         torch.save(self.head.state_dict(), os.path.join(save_directory, "head.pth"))
         
         # 保存 config
         with open(os.path.join(save_directory, "config.json"), "w") as f:
-            f.write(self.config.to_json_string())
+            f.write(self.config.to_json_string(indent=2))  # 可读性更好
+    
+    @classmethod
+    def from_pretrained(cls, paths, num_labels=None):
+    # def from_pretrained(cls, load_directory, num_labels=None):
+        print(f"🟢 [CustomModel] Loading from {paths}")
 
-    @classmethod #告诉 Python 这个方法是类方法，不是实例方法
-    def from_pretrained(cls, load_directory, num_labels=None):
-        # 1. 加载 backbone（包括 config）
+        config_path = paths['config']
+        model_path = paths['model']
+        adapter_weights_path = paths['adapter_weight']
 
-        backbone = AutoModel.from_pretrained(load_directory)
-        config = backbone.config
+        # ✅ Step 1: 加载 transformer config
+        if not os.path.exists(config_path):
+            raise FileNotFoundError(f"❌ Missing config.json in {config_path}")
+        config = AutoConfig.from_pretrained(config_path)
 
-        # 尝试从 config 中读 num_labels
+        # ✅ Step 2: 构造 backbone 模型结构
+        backbone = AutoModel.from_config(config)
+
+        # ✅ Step 3: 加载主模型权重
+        if not os.path.exists(model_path):
+            raise FileNotFoundError(f"❌ Missing pytorch_model.bin in {model_path}")
+        state_dict = torch.load(model_path, map_location="cpu")
+        backbone.load_state_dict(state_dict)
+        print("✅ Loaded backbone from config + weights")
+
+        # ✅ Step 4: 获取 num_labels
         config_num_labels = getattr(config, 'num_labels', None)
-
-        # 使用优先级：外部传入 > config.json > fallback
         effective_num_labels = num_labels if num_labels is not None else (config_num_labels or 2)
 
-        # 2. 构建模型（用来自定义的分类头维度）
-        model = cls(backbone_dir=load_directory, num_labels=effective_num_labels)
+        # ✅ Step 5: 构建自定义分类模型
+        model = cls(backbone=backbone, num_labels=effective_num_labels)
+        model.config = config  # 更新 config（否则用的是旧的）
 
-        # 3. 加载自定义 Head
-        head_path = os.path.join(load_directory, "head.pth")
-        model.head.load_state_dict(torch.load(head_path, map_location="cpu"))
-
-        # ✅ 5. 加载 LoRA adapter 权重（Q/V 层）
-        adapter_weights_path = os.path.join(load_directory, "adapter_model.safetensors")
+        # ✅ Step 6: 加载 adapter（LoRA）
         if os.path.exists(adapter_weights_path):
-            model.load_state_dict(torch.load(adapter_weights_path, map_location="cpu"), strict=False)
+            print("🧩 Loading LoRA adapter weights...")
+            model.load_state_dict(load_file(adapter_weights_path), strict=False)
+        else:
+            print("⚠️ adapter_model.safetensors not found, skipping LoRA load")
 
         return model
+
+    # @classmethod #告诉 Python 这个方法是类方法，不是实例方法
+    # def from_pretrained(cls, load_directory, num_labels=None):
+    #     # 1. 加载 backbone（包括 config）
+    #     print(f'Check dir:  {load_directory}')
+
+    #     backbone = AutoModel.from_pretrained(load_directory, local_files_only=True)
+    #     config = backbone.config
+
+    #     # 尝试从 config 中读 num_labels
+    #     config_num_labels = getattr(config, 'num_labels', None)
+
+    #     # 使用优先级：外部传入 > config.json > fallback
+    #     effective_num_labels = num_labels if num_labels is not None else (config_num_labels or 2)
+
+    #     # 2. 构建模型（用来自定义的分类头维度）
+    #     model = cls(backbone_dir=load_directory, num_labels=effective_num_labels)
+
+    #     # 3. 加载自定义 Head
+    #     head_path = os.path.join(load_directory, "head.pth")
+    #     model.head.load_state_dict(torch.load(head_path, map_location="cpu"))
+
+    #     # ✅ 5. 加载 LoRA adapter 权重（Q/V 层）
+    #     adapter_weights_path = os.path.join(load_directory, "adapter_model.safetensors")
+    #     if os.path.exists(adapter_weights_path):
+    #         model.load_state_dict(torch.load(adapter_weights_path, map_location="cpu"), strict=False)
+
+    #     return model
 
