@@ -36,6 +36,6 @@ class RouterDataset(Dataset):
         return {
             "input_ids": encoded["input_ids"].squeeze(0),
             "attention_mask": encoded["attention_mask"].squeeze(0),
-            "task_name": torch.tensor(task_name),
+            "task_name": task_name,
             "label": torch.tensor(label)  # 分类器 label 就是 task_id
         }
