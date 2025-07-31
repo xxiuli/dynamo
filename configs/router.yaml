@@ -3,7 +3,6 @@ task_type: classification
 num_labels: 7
 task_name: 'router'
 
-
 # ========= 模型结构 =========
 backbone: roberta-base  # 可选你喜欢的主干，如 roberta-base / distilroberta 等
 
@@ -12,7 +11,7 @@ router:
 
 # ========= 训练参数 =========
 train:
-  seed: 42
+  seed: 223
   batch_size: 16
   learning_rate: 5e-5
   num_epochs: 5

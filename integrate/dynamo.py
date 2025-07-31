@@ -8,6 +8,7 @@ import torch
 import torch.nn.functional as F
 from utils.setting_utils import apply_path_placeholders
 import os
+from utils.task_id_map import get_id2task, get_task2id
 
 def load_router(router_cfg):
     # 使用 router.tokenizer 加载 tokenizer
@@ -111,6 +112,7 @@ class Dynamo:
         self.tokenizer, self.router = load_router(config["router"])
         self.tasks = config["tasks"]
         self.target_adapters = get_all_adapters(self.tasks, self.device)
+        self.task_id_map = get_task2id()
 
     def predict(self, text: str, top_k: int = 3) -> dict:
         # Step 1: 用 Router 分发任务
@@ -124,7 +126,7 @@ class Dynamo:
         task_idx = torch.argmax(probs, dim=1).item()
 
         # 找到任务名（保持顺序一致）
-        task_name = list(self.tasks.keys())[task_idx]
+        task_name = self.task_id_map[task_idx]
         task_cfg = self.tasks[task_name]
 
         adapter_info = self.target_adapters[task_name]
@@ -139,17 +141,13 @@ class Dynamo:
         top_probs, top_indices = probs[0].topk(k=min(top_k, len(self.tasks)))
         top_k_results = [
             {
-                "task": list(self.tasks.keys())[i],
+                "task": self.task_id_map[i.item()],
                 "confidence": round(top_probs[j].item(), 4)
             }
             for j, i in enumerate(top_indices)
         ]
 
         # Step 2: Adapter 推理
-        adapter_info = self.target_adapters[task_name]
-        adapter_tokenizer = adapter_info["tokenizer"]
-        adapter_model = adapter_info["model"]
-
         task_type = task_cfg["task_type"].lower()
         task_inputs = preprocess_data(text, task_type, adapter_tokenizer)
         task_inputs = {k: v.to(self.device) for k, v in task_inputs.items()}
@@ -159,7 +157,7 @@ class Dynamo:
         # Step 3: 模型推理 # Step 4: 解码结果
         with torch.no_grad():
             if task_type == "summarization":
-                print("[🧠] 使用 generate 进行 summarization 推理")
+                print("[🧠 Adapter] 使用 generate 进行 summarization 推理")
                 for key in ["decoder_input_ids", "decoder_inputs_embeds"]:
                     if key in task_inputs:
                         print(f"[⚠️] 移除冲突字段：{key}")
@@ -172,26 +170,33 @@ class Dynamo:
                     early_stopping=True
                 )
                 pred = adapter_tokenizer.decode(pred_ids[0], skip_special_tokens=True).strip()
+                print(f"📤 Adapter输出（摘要）: {pred}")
             
             elif task_type == "qa":
+                print("[🧠 Adapter] 执行问答任务（extractive QA）")
                 outputs = adapter_model(**task_inputs)
                 start_idx = torch.argmax(outputs.start_logits, dim=1)
                 end_idx = torch.argmax(outputs.end_logits, dim=1)
                 pred_tokens = task_inputs["input_ids"][0][start_idx: end_idx + 1]
                 pred = adapter_tokenizer.decode(pred_tokens, skip_special_tokens=True)
+                print(f"📤 Adapter输出（类别索引）: {pred}")
 
             elif task_type == "classification":
+                print("[🧠 Adapter] 执行classification分类任务")
                 outputs = adapter_model(**task_inputs)
                 pred = torch.argmax(outputs.logits, dim=-1).item()
+                print(f"📤 Adapter输出（类别索引）: {pred}")
 
-            
             elif task_type == "ner":
+                print("[🧠 Adapter] 执行ner命名实体识别任务")
                 outputs = adapter_model(**task_inputs)  # logits: [1, seq_len, num_labels]
                 predicted_ids = torch.argmax(outputs, dim=-1)  # [1, seq_len]
                 tokens = adapter_tokenizer.convert_ids_to_tokens(task_inputs["input_ids"][0])
                 labels = [adapter_model.config.id2label[idx.item()] for idx in predicted_ids[0]]
                 
                 pred = list(zip(tokens, labels))  # token-label pair
+                preview = list(zip(tokens, labels))[:10]
+                print(f"📤 Adapter输出（前10对 token-label）: {preview}")
 
             else:
                 pred = "Unsupported task type"
@@ -199,7 +204,7 @@ class Dynamo:
         return {
             "text": text,
             "task": task_name,
-            "task_type": task_type,
+            "task_id": task_idx,
             "predicted_label": pred,
             "top_k_router": top_k_results
         }

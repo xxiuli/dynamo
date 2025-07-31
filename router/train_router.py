@@ -17,6 +17,7 @@ from torch.utils.data import DataLoader
 from data_loaders.dataset_router import RouterDataset
 from utils.setting_utils import parse_args, apply_path_placeholders
 from utils.train_utils import set_seed
+from utils.task_id_map import get_id2task, get_task2id
 from trainers.trainer_router import RouterTrainer
 
 def load_router_config(config_path):
@@ -49,16 +50,19 @@ def main():
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model.to(device)
+
+    task_id_map = get_task2id()
     
     # Load dataset
-    train_dataset = RouterDataset(config['data']['train_file'], tokenizer, config['train']['max_seq_length'])
-    val_dataset = RouterDataset(config['data']['val_file'], tokenizer, config['train']['max_seq_length'])
+    train_dataset = RouterDataset(config['data']['train_file'], tokenizer, task_id_map, config['train']['max_seq_length'])
+    val_dataset = RouterDataset(config['data']['val_file'], tokenizer, task_id_map, config['train']['max_seq_length'])
 
     train_loader = DataLoader(train_dataset, batch_size=config['train']['batch_size'], shuffle=True)
     val_loader = DataLoader(val_dataset, batch_size=config['train']['batch_size'])
 
     # Prepare trainer
     config['train']['steps_per_epoch'] = len(train_loader)
+    
     trainer = RouterTrainer(model, config, device)
 
     # Train

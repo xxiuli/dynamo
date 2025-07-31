@@ -1,0 +1,9 @@
+{
+  "sst2": 0,
+  "mnli": 1,
+  "qqp": 2,
+  "squad": 3,
+  "xsum": 4,
+  "agnews": 5,
+  "conll2003": 6
+}

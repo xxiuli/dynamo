@@ -52,7 +52,7 @@ tasks:
       adapter_weight: ${DRIVE_ROOT}/adapter_qqp/adapter_model.safetensors
 
   agnews:
-    task_id: 3
+    task_id: 5
     task_type: classification
     config_path: configs/single_lora_agnews.yaml
     adapter_path: ${DRIVE_ROOT}/adapter_agnews
@@ -65,7 +65,7 @@ tasks:
       adapter_weight: ${DRIVE_ROOT}/adapter_agnews/adapter_model.safetensors
 
   squad:
-    task_id: 4
+    task_id: 3
     task_type: qa
     config_path: configs/single_lora_squad.yaml
     adapter_path: ${DRIVE_ROOT}/adapter_squad
@@ -76,7 +76,7 @@ tasks:
       adapter_weight: ${DRIVE_ROOT}/adapter_squad/adapter_model.safetensors
 
   xsum:
-    task_id: 5
+    task_id: 4
     task_type: summarization
     config_path: configs/single_lora_xsum.yaml
     adapter_path: ${DRIVE_ROOT}/adapter_xsum

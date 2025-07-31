@@ -4,6 +4,11 @@ import json
 from datasets import load_dataset, Dataset
 from tqdm import tqdm
 
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
+from utils.task_id_map import get_task2id
+
 # ==== 加载 YAML 配置 ====
 def load_config(yaml_path):
     try:
@@ -68,9 +73,10 @@ def process_task(task_name, task_id, task_cfg, split_name, output_list, seed, sh
             print(f"[!] Skipping example {idx} from {task_name} due to error: {e}")
 
 # ==== 主函数 ====
-def build_router_dataset(yaml_path, save_dir="router_data"):
+def build_router_dataset(yaml_path, save_dir="data/router_data"):
     os.makedirs(save_dir, exist_ok=True)
     cfg = load_config(yaml_path)
+    task_id_map = get_task2id()
     
     seed = cfg.get("sampling", {}).get("seed", 42)
     
@@ -80,7 +86,13 @@ def build_router_dataset(yaml_path, save_dir="router_data"):
 
     router_train, router_val = [], []
 
-    for task_id, (task_name, task_cfg) in enumerate(tasks.items()):
+    for task_name, task_cfg in tasks.items():
+        # ✅ 用映射取出 task_id，而不是用 enumerate
+        if task_name not in task_id_map:
+            print(f"[❌] Task {task_name} not found in task_id_map.json. Skipping...")
+            continue
+        task_id = task_id_map[task_name]
+
         try:
             process_task(task_name, task_id, task_cfg, "train", router_train, seed, shuffle)
             process_task(task_name, task_id, task_cfg, "val", router_val, seed, shuffle)

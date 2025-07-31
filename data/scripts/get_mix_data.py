@@ -1,82 +1,113 @@
+# get_mix_data.py for inference
 import os
 import yaml
 import json
-from datasets import load_dataset
+from datasets import load_dataset, Dataset
 from tqdm import tqdm
-from transformers import AutoTokenizer
+import os
+import sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
+from utils.task_id_map import get_task2id
 
+# ==== 加载 YAML 配置 ====
 def load_config(yaml_path):
-    with open(yaml_path, 'r', encoding='utf-8') as f:
-        return yaml.safe_load(f)
+    try:
+        with open(yaml_path, 'r', encoding='utf-8') as f:
+            return yaml.safe_load(f)
+    except Exception as e:
+        raise RuntimeError(f"Failed to load config file: {e}")
 
+# ==== 每个任务的数据抽取函数 ====
 def extract_text(example, task_name):
-    if task_name == "sst2":
-        return example["sentence"]
-    elif task_name == "mnli":
-        return f"Premise: {example['premise']} Hypothesis: {example['hypothesis']}"
-    elif task_name == "qqp":
-        return f"Q1: {example['question1']} Q2: {example['question2']}"
-    elif task_name == "squad":
-        return f"Question: {example['question']} Context: {example['context']}"
-    elif task_name == "xsum":
-        return example["document"]
-    elif task_name == "agnews":
-        return example["text"]
-    elif task_name == "conll2003" or task_name == "conll03":
-        return " ".join(example["tokens"])
-    else:
-        raise NotImplementedError(f"Task {task_name} not supported.")
+    try:
+        if task_name == "sst2":
+            return example["sentence"]
+        elif task_name == "mnli":
+            return f"Premise: {example['premise']} Hypothesis: {example['hypothesis']}"
+        elif task_name == "qqp":
+            return f"Q1: {example['question1']} Q2: {example['question2']}"
+        elif task_name == "squad":
+            return f"Question: {example['question']} Context: {example['context']}"
+        elif task_name == "xsum":
+            return example["document"]
+        elif task_name == "agnews":
+            return example['text']
+        elif task_name == "conll2003" or task_name == "conll03":
+            return " ".join(example["tokens"])
+        else:
+            raise NotImplementedError(f"Task {task_name} not supported.")
+    except KeyError as ke:
+        raise ValueError(f"Missing expected key for task {task_name}: {ke}")
 
-def sample_router_training_data(yaml_path, output_path):
-    cfg = load_config(yaml_path)
-    seed = cfg.get("sampling", {}).get("seed", 42)
-    shuffle = cfg.get("sampling", {}).get("shuffle", True)
-    tokenizer_name = cfg.get("sampling", {}).get("tokenizer", "bert-base-uncased")
-    min_tokens = cfg.get("sampling", {}).get("min_tokens", 10)
-    max_tokens = cfg.get("sampling", {}).get("max_tokens", 512)
+# ==== 执行采样与写入 ====
+def process_task(task_name, task_id, task_cfg, split_name, output_list, seed, shuffle):
+    name = task_cfg["dataset_name"]
+    subset = task_cfg.get("subset")
+    split = task_cfg[split_name + "_split"]
+    max_samples = task_cfg[split_name + "_samples"]
 
-    tokenizer = AutoTokenizer.from_pretrained(tokenizer_name)
-    task2id = {task_name: idx for idx, task_name in enumerate(cfg["tasks"].keys())}
+    print(f"\n📦 Processing [{task_name}] ({split_name})...")
+    try:
+        ds = load_dataset(name, subset, split=split)
+    except Exception as e:
+        raise RuntimeError(f"Failed to load dataset {name} ({task_name}): {e}")
 
-    samples = []
-
-    for task_name, task_cfg in cfg["tasks"].items():
-        print(f"\n📦 Sampling from: {task_name}")
-        dataset_name = task_cfg["dataset_name"]
-        subset = task_cfg.get("subset")
-        split = task_cfg.get("train_split", "train")
-        num_samples = task_cfg.get("train_samples", 100)
-
-        ds = load_dataset(dataset_name, subset, split=split)
-        if shuffle:
+    if shuffle:
+        try:
             ds = ds.shuffle(seed=seed)
+        except Exception as e:
+            print(f"[!] Shuffle failed for {task_name}: {e}")
 
-        count = 0
-        for example in tqdm(ds, desc=task_name):
-            if count >= num_samples:
-                break
-            try:
-                text = extract_text(example, task_name)
-                tokenized = tokenizer(text, truncation=False)
-                num_tokens = len(tokenized["input_ids"])
-                if min_tokens <= num_tokens <= max_tokens:
-                    samples.append({
-                        "text": text,
-                        "task_id": task2id[task_name],
-                        "task_name": task_name
-                    })
-                    count += 1
-            except Exception as e:
-                print(f"[!] Skipped sample due to error: {e}")
+    if max_samples != -1:
+        ds = ds.select(range(min(max_samples, len(ds))))
 
-    os.makedirs(os.path.dirname(output_path), exist_ok=True)
-    with open(output_path, "w", encoding="utf-8") as f:
-        for sample in samples:
-            f.write(json.dumps(sample, ensure_ascii=False) + "\n")
+    for idx, ex in enumerate(tqdm(ds, desc=f"{task_name}-{split_name}")):
+        try:
+            text = extract_text(ex, task_name)
+            output_list.append({
+                "text": text,
+                "task_id": task_id,
+                "task_name": task_name
+            })
+        except Exception as e:
+            print(f"[!] Skipping example {idx} from {task_name} due to error: {e}")
 
-    print(f"\n✅ Saved {len(samples)} Router samples to {output_path}")
+# ==== 主函数 ====
+def build_router_dataset(yaml_path, save_dir="data/router_data"):
+    os.makedirs(save_dir, exist_ok=True)
+    cfg = load_config(yaml_path)
+    task_id_map = get_task2id()
+    
+    seed = cfg.get("sampling", {}).get("seed", 42)
+    
+    shuffle = cfg.get("sampling", {}).get("shuffle", True)
+    
+    tasks = cfg["tasks"]
+
+    router_test = []
+
+    for task_name, task_cfg in tasks.items():
+        # ✅ 用映射取出 task_id，而不是用 enumerate
+        if task_name not in task_id_map:
+            print(f"[❌] Task {task_name} not found in task_id_map.json. Skipping...")
+            continue
+        task_id = task_id_map[task_name]
+
+        try:
+            process_task(task_name, task_id, task_cfg, "test", router_test, seed, shuffle)
+        except Exception as e:
+            print(f"[!!] Error processing task {task_name}: {e}")
+
+    try:
+        with open(os.path.join(save_dir, "router_test.jsonl"), "w", encoding="utf-8") as f:
+            for item in router_test:
+                f.write(json.dumps(item, ensure_ascii=False) + "\n")
+    except Exception as e:
+        raise RuntimeError(f"Failed to write output files: {e}")
+
+    print(f"\n✅ Finished! Saved: {len(router_test)} train samples, {len(router_test)} val samples → {save_dir}/")
+
 
 # ✅ 使用示例
 if __name__ == "__main__":
-    out_path = r"C:\Users\xiuxiuli.SSNC-CORP\Desktop\learn\567ML\dynamo\data\end2end_mix\testset.json"
-    sample_router_training_data("data/download_configs/test_sampling.yaml", out_path)
+    build_router_dataset("data/download_configs/test_sampling.yaml")

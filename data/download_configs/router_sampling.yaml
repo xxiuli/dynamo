@@ -1,5 +1,5 @@
 sampling:
-  seed: 38                  # 随机种子，保证可复现性
+  seed: 31                  # 随机种子，保证可复现性
   shuffle: true             # 是否打乱采样
 
 tasks:
@@ -32,16 +32,16 @@ tasks:
     subset: null
     train_split: "train"
     val_split: "validation"
-    train_samples: 3000
-    val_samples: 800
+    train_samples: 2000
+    val_samples: 500
 
   xsum:
     dataset_name: "xsum"
     subset: null
     train_split: "train"
     val_split: "validation"
-    train_samples: 3000
-    val_samples: 800
+    train_samples: 2000
+    val_samples: 500
 
   agnews:
     dataset_name: "ag_news"
@@ -56,5 +56,5 @@ tasks:
     subset: null
     train_split: "train"
     val_split: "validation"
-    train_samples: -1        # -1 表示用全量
-    val_samples: -1          # -1 表示用全量
+    train_samples: 2000        # -1 表示用全量
+    val_samples: 500          # -1 表示用全量
