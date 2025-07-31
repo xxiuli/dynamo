@@ -1,9 +1,10 @@
 # router/router_classifer.py
 import torch.nn as nn
-from transformers import AutoModel
+from transformers import AutoModel, AutoTokenizer
 import os
 import torch
 import json
+import torch.nn.functional as F
 
 class RouterClassifier(nn.Module):
     def __init__(self, hidden_size=768, num_task=7, temperature=1.0, backbone_name="roberta-base"):
@@ -11,10 +12,16 @@ class RouterClassifier(nn.Module):
         self.temperature = temperature
         self.backbone_name= backbone_name
         self.backbone = AutoModel.from_pretrained(backbone_name)
+        self.hidden_size = hidden_size
+        self.num_task = num_task
 
-        self.classifier = nn.Linear(hidden_size, num_task) #分类头
+        self.classifier = nn.Sequential(
+                    nn.Linear(hidden_size, hidden_size),
+                    nn.ReLU(),
+                    nn.Dropout(0.1),
+                    nn.Linear(hidden_size, num_task))
 
-    def forward(self, input_ids,  attention_mask=None):
+    def forward(self, input_ids,  attention_mask=None, return_logits=False):
         # 允许 attention_mask 为 None（兼容性更强）
         if attention_mask is None:
             attention_mask = (input_ids != self.backbone.config.pad_token_id).long()
@@ -22,10 +29,17 @@ class RouterClassifier(nn.Module):
         outputs = self.backbone(input_ids=input_ids, attention_mask=attention_mask)
         cls_token = outputs.last_hidden_state[:, 0, :]  # [CLS] embedding
         logits = self.classifier(cls_token)
-        return logits / self.temperature
+        logits = logits / self.temperature
+        if return_logits:
+            return logits
+        return F.softmax(logits, dim=-1)
     
     def save_pretrained(self, save_dir):
         os.makedirs(save_dir, exist_ok=True)
+
+        # 如果未来你需要部署推理服务
+        tokenizer = AutoTokenizer.from_pretrained(self.backbone_name)
+        tokenizer.save_pretrained(save_dir)
 
         # 保存 backbone
         self.backbone.save_pretrained(save_dir)
@@ -37,8 +51,8 @@ class RouterClassifier(nn.Module):
         config = {
             "backbone_name": self.backbone.config._name_or_path,
             "temperature": self.temperature,
-            "hidden_size": self.classifier.in_features,
-            "num_task": self.classifier.out_features
+            "hidden_size": self.hidden_size,
+            "num_task": self.num_task
         }
         with open(os.path.join(save_dir, "config.json"), "w") as f:
             json.dump(config, f)

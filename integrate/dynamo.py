@@ -113,6 +113,8 @@ class Dynamo:
         self.tasks = config["tasks"]
         self.target_adapters = get_all_adapters(self.tasks, self.device)
         self.task_id_map = get_task2id()
+        self.id_task_map = get_id2task()
+        self.temperature = config['router']['temperature']
 
     def predict(self, text: str, top_k: int = 3) -> dict:
         # Step 1: 用 Router 分发任务
@@ -121,12 +123,14 @@ class Dynamo:
         attention_mask = inputs['attention_mask'].to(self.device)
 
         logits = self.router(input_ids=input_ids, attention_mask=attention_mask)    # 🛠️ 只传 input_ids 给 Router
-        probs = F.softmax(logits, dim=-1)
+        probs = F.softmax(logits/ self.temperature, dim=-1)
 
         task_idx = torch.argmax(probs, dim=1).item()
 
         # 找到任务名（保持顺序一致）
-        task_name = self.task_id_map[task_idx]
+        task_name = self.id_task_map[task_idx]
+
+        print(f"\n📊 Router 认为这是:{task_name} - {task_idx }任务")
         task_cfg = self.tasks[task_name]
 
         adapter_info = self.target_adapters[task_name]
@@ -141,7 +145,7 @@ class Dynamo:
         top_probs, top_indices = probs[0].topk(k=min(top_k, len(self.tasks)))
         top_k_results = [
             {
-                "task": self.task_id_map[i.item()],
+                "task": self.id_task_map[i.item()],
                 "confidence": round(top_probs[j].item(), 4)
             }
             for j, i in enumerate(top_indices)
@@ -157,7 +161,7 @@ class Dynamo:
         # Step 3: 模型推理 # Step 4: 解码结果
         with torch.no_grad():
             if task_type == "summarization":
-                print("[🧠 Adapter] 使用 generate 进行 summarization 推理")
+                print("[🧠 LORA Adapter] 使用 generate 进行 summarization 推理")
                 for key in ["decoder_input_ids", "decoder_inputs_embeds"]:
                     if key in task_inputs:
                         print(f"[⚠️] 移除冲突字段：{key}")
@@ -173,7 +177,7 @@ class Dynamo:
                 print(f"📤 Adapter输出（摘要）: {pred}")
             
             elif task_type == "qa":
-                print("[🧠 Adapter] 执行问答任务（extractive QA）")
+                print("[🧠 LORA Adapter] 执行问答任务（extractive QA）")
                 outputs = adapter_model(**task_inputs)
                 start_idx = torch.argmax(outputs.start_logits, dim=1)
                 end_idx = torch.argmax(outputs.end_logits, dim=1)
@@ -182,13 +186,13 @@ class Dynamo:
                 print(f"📤 Adapter输出（类别索引）: {pred}")
 
             elif task_type == "classification":
-                print("[🧠 Adapter] 执行classification分类任务")
+                print("[🧠 LORA Adapter] 执行classification分类任务")
                 outputs = adapter_model(**task_inputs)
                 pred = torch.argmax(outputs.logits, dim=-1).item()
                 print(f"📤 Adapter输出（类别索引）: {pred}")
 
             elif task_type == "ner":
-                print("[🧠 Adapter] 执行ner命名实体识别任务")
+                print("[🧠 LORA Adapter] 执行ner命名实体识别任务")
                 outputs = adapter_model(**task_inputs)  # logits: [1, seq_len, num_labels]
                 predicted_ids = torch.argmax(outputs, dim=-1)  # [1, seq_len]
                 tokens = adapter_tokenizer.convert_ids_to_tokens(task_inputs["input_ids"][0])
@@ -196,7 +200,7 @@ class Dynamo:
                 
                 pred = list(zip(tokens, labels))  # token-label pair
                 preview = list(zip(tokens, labels))[:10]
-                print(f"📤 Adapter输出（前10对 token-label）: {preview}")
+                print(f"📤 LORA Adapter输出（前10对 token-label）: {preview}")
 
             else:
                 pred = "Unsupported task type"

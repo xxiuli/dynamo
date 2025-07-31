@@ -7,7 +7,7 @@ import os
 
 # 写死配置路径和输入输出路径
 config_path = "configs/dynamo.yaml"
-input_path = "data/end2end_mix/testset.json"
+input_path = "data/end2end_mix/router_test.json"
 output_path = "results/inference_results.jsonl"
 
 def parse_args():

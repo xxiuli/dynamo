@@ -64,6 +64,7 @@ def process_task(task_name, task_id, task_cfg, split_name, output_list, seed, sh
     for idx, ex in enumerate(tqdm(ds, desc=f"{task_name}-{split_name}")):
         try:
             text = extract_text(ex, task_name)
+            text = f"[TASK={task_name}] {text}"
             output_list.append({
                 "text": text,
                 "task_id": task_id,
