@@ -96,7 +96,7 @@ def build_router_dataset(yaml_path, save_dir="data/router_data"):
 
         try:
             process_task(task_name, task_id, task_cfg, "train", router_train, seed, shuffle)
-            process_task(task_name, task_id, task_cfg, "val", router_val, seed, shuffle)
+            # process_task(task_name, task_id, task_cfg, "val", router_val, seed, shuffle)
         except Exception as e:
             print(f"[!!] Error processing task {task_name}: {e}")
 
@@ -104,9 +104,9 @@ def build_router_dataset(yaml_path, save_dir="data/router_data"):
         with open(os.path.join(save_dir, "router_train.jsonl"), "w", encoding="utf-8") as f:
             for item in router_train:
                 f.write(json.dumps(item, ensure_ascii=False) + "\n")
-        with open(os.path.join(save_dir, "router_val.jsonl"), "w", encoding="utf-8") as f:
-            for item in router_val:
-                f.write(json.dumps(item, ensure_ascii=False) + "\n")
+        # with open(os.path.join(save_dir, "router_val.jsonl"), "w", encoding="utf-8") as f:
+        #     for item in router_val:
+        #         f.write(json.dumps(item, ensure_ascii=False) + "\n")
     except Exception as e:
         raise RuntimeError(f"Failed to write output files: {e}")
 

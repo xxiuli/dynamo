@@ -1,5 +1,5 @@
 sampling:
-  seed: 31                  # 随机种子，保证可复现性
+  seed: 5642                  # 随机种子，保证可复现性
   shuffle: true             # 是否打乱采样
 
 tasks:
