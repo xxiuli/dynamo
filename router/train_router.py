@@ -51,6 +51,12 @@ def main():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model.to(device)
 
+    # ❄️ 冻结 backbone 参数，不让 RoBERTa 参与训练, 不让它继续学语言，以免混淆
+    for param in model.backbone.parameters():
+        param.requires_grad = False
+
+    print("[INFO] RoBERTa backbone is frozen.")
+
     task_id_map = get_task2id()
     
     # Load dataset

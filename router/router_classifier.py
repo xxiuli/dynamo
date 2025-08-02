@@ -18,7 +18,7 @@ class RouterClassifier(nn.Module):
         self.classifier = nn.Sequential(
                     nn.Linear(hidden_size, hidden_size),
                     nn.ReLU(),
-                    nn.Dropout(0.1),
+                    nn.Dropout(0.4),
                     nn.Linear(hidden_size, num_task))
 
     def forward(self, input_ids,  attention_mask=None, return_logits=False):
@@ -27,8 +27,20 @@ class RouterClassifier(nn.Module):
             attention_mask = (input_ids != self.backbone.config.pad_token_id).long()
 
         outputs = self.backbone(input_ids=input_ids, attention_mask=attention_mask)
-        cls_token = outputs.last_hidden_state[:, 0, :]  # [CLS] embedding
-        logits = self.classifier(cls_token)
+
+        # cls_token = outputs.last_hidden_state[:, 0, :]  # [CLS] embedding
+        # logits = self.classifier(cls_token)
+
+        #尝试用 Mean Pooling 替换掉当前的 [CLS] token 作为 Router 分类输入
+        # ✅ Mean Pooling 替代 CLS
+        last_hidden = outputs.last_hidden_state  # shape: [B, T, H]
+        mask = attention_mask.unsqueeze(-1).expand(last_hidden.size()).float()  # shape: [B, T, H]
+        summed = torch.sum(last_hidden * mask, dim=1)  # sum over tokens
+        counts = torch.clamp(mask.sum(dim=1), min=1e-9)  # avoid division by zero
+        mean_pooled = summed / counts  # shape: [B, H]
+
+        logits = self.classifier(mean_pooled)  # use mean pooled embeddings
+
         logits = logits / self.temperature
         if return_logits:
             return logits
