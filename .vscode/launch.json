@@ -38,7 +38,7 @@
       "program": "${workspaceFolder}/inference_cli.py",
       "args": [
         "--config", "configs/dynamo.yaml",
-        "--input_json", "data/end2end_mix/testset.json",
+        "--input_json", "data/end2end_mix/data_inference.jsonl",
         "--output_json", "results/inference_results.jsonl"
       ],
       "console": "integratedTerminal"

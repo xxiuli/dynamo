@@ -86,7 +86,7 @@ tasks:
       model: ${DRIVE_ROOT}/adapter_xsum/pytorch_model.bin
       adapter_weight: ${DRIVE_ROOT}/adapter_xsum/adapter_model.safetensors
 
-  conll03:
+  conll2003:
     task_id: 6
     task_type: ner
     config_path: configs/single_lora_conll03.yaml

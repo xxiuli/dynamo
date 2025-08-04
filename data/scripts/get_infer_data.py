@@ -67,18 +67,23 @@ def process_task(task_name, task_id, task_cfg, split_name, output_list, seed, sh
     for idx, ex in enumerate(tqdm(ds, desc=f"{task_name}-{split_name}")):
         try:
             text, label = extract_text_and_label(ex, task_name)
+            ex["text"] = text
+            ex["task_id"] = task_id
+            ex["task_name"] = task_name
+            ex["label"] = label
+            output_list.append(ex)
             # text = f"[TASK={task_name}] {text}"
-            output_list.append({
-                "text": text,
-                "task_id": task_id,
-                "task_name": task_name,
-                "label": label
-            })
+            # output_list.append({
+            #     "text": text,
+            #     "task_id": task_id,
+            #     "task_name": task_name,
+            #     "label": label
+            # })
         except Exception as e:
             print(f"[!] Skipping example {idx} from {task_name} due to error: {e}")
 
 # ==== 主函数 ====
-def build_router_dataset(yaml_path, save_dir="data/router_data"):
+def build_router_dataset(yaml_path, save_dir="data/end2end_mix"):
     os.makedirs(save_dir, exist_ok=True)
     cfg = load_config(yaml_path)
     task_id_map = get_task2id()
@@ -104,7 +109,7 @@ def build_router_dataset(yaml_path, save_dir="data/router_data"):
             print(f"[!!] Error processing task {task_name}: {e}")
 
     try:
-        with open(os.path.join(save_dir, "router_test.jsonl"), "w", encoding="utf-8") as f:
+        with open(os.path.join(save_dir, "data_inference.jsonl"), "w", encoding="utf-8") as f:
             for item in router_test:
                 f.write(json.dumps(item, ensure_ascii=False) + "\n")
     except Exception as e:

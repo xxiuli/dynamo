@@ -89,8 +89,10 @@ def preprocess_data(text: str, task_type: str, tokenizer):
     if task_type == "classification":
         return tokenizer(text, return_tensors="pt")
     elif task_type == "qa":
-        # 暂用模板（后续建议由真实问答结构代替）
-        return tokenizer({"question": "What is X?", "context": text}, return_tensors="pt")
+        # 因为 text 是统一拼接好的字符串，直接喂 tokenizer 即可
+        if not isinstance(text, str):
+            raise ValueError(f"[ERROR] Input text must be str, got {type(text)}")
+        return tokenizer(text, return_tensors="pt")
     elif task_type == "summarization":
         return tokenizer(text, return_tensors="pt")
     else:
@@ -116,32 +118,71 @@ class Dynamo:
         self.id_task_map = get_id2task()
         self.temperature = config['router']['temperature']
 
-    def predict(self, text: str, top_k: int = 3) -> dict:
+    # 假设输入是完整样本 dict（含 text, question, context 等）
+    def build_task_inputs(self, sample: dict, task_type: str, tokenizer):
+        if task_type == "classification":
+            return tokenizer(
+                sample["text"], 
+                return_tensors="pt",
+                truncation=True,
+                max_length=512
+            ).to(self.device)
+
+        elif task_type == "qa":
+            return tokenizer(
+                sample["question"], sample["context"],
+                return_tensors="pt",
+                truncation=True,
+                max_length=512
+            ).to(self.device)
+
+        elif task_type == "summarization":
+            return tokenizer(
+                sample["document"],
+                return_tensors="pt",
+                truncation=True,
+                max_length=512
+            ).to(self.device)
+
+        elif task_type == "ner":
+            return tokenizer(
+                sample["tokens"],
+                is_split_into_words=True,
+                return_tensors="pt",
+                truncation=True,
+                max_length=320
+            ).to(self.device)
+
+        else:
+            raise ValueError(f"[ERROR] Unknown task type: {task_type}")
+
+    def predict(self, sample: dict, top_k: int = 3) -> dict:
+        apater_pred_class_name = None
+
         # Step 1: 用 Router 分发任务
-        inputs = self.tokenizer(text, return_tensors='pt')
-        input_ids = inputs['input_ids'].to(self.device)
+        inputs = self.tokenizer(
+            sample['text'], 
+            return_tensors='pt',
+            truncation=True,
+            max_length=512,
+            padding="max_length"
+            )
+        input_ids = inputs['input_ids'][:, :512].to(self.device)
         attention_mask = inputs['attention_mask'].to(self.device)
 
+        # router处理
         logits = self.router(input_ids=input_ids, attention_mask=attention_mask)    # 🛠️ 只传 input_ids 给 Router
+        
         probs = F.softmax(logits/ self.temperature, dim=-1)
+        pred_task_idx = torch.argmax(probs, dim=1).item()
+        pred_task_name = self.id_task_map[pred_task_idx]  # 找到任务名（保持顺序一致）
 
-        task_idx = torch.argmax(probs, dim=1).item()
-
-        # 找到任务名（保持顺序一致）
-        task_name = self.id_task_map[task_idx]
-
-        print(f"\n📊 Router 认为这是:{task_name} - {task_idx }任务")
-        task_cfg = self.tasks[task_name]
-
-        adapter_info = self.target_adapters[task_name]
-        adapter_tokenizer = adapter_info["tokenizer"]
-        adapter_model = adapter_info["model"]
-
-        # 打印 Router logits 和概率
-        print("\n📊 Router logits:", logits.tolist())
+        # print(f"\n📊 Router 认为这是:{task_name} - {task_idx }任务")
+        print(f"\n[🧠] Router 执行-分类-任务-------------------->")
+        print("📊 Router logits:", logits.tolist()) # 打印 Router logits 和概率
         print("📈 Router softmax:", probs.tolist()) 
 
-         # 输出 Top-k 路由候选
+        # 输出 Top-k 路由候选
         top_probs, top_indices = probs[0].topk(k=min(top_k, len(self.tasks)))
         top_k_results = [
             {
@@ -151,67 +192,105 @@ class Dynamo:
             for j, i in enumerate(top_indices)
         ]
 
-        # Step 2: Adapter 推理
+        # 是否Router判断正确
+        expected_task_id = sample.get("task_id", None)
+        is_correct_router = (pred_task_idx == expected_task_id )
+
+        task_cfg = self.tasks[pred_task_name]
         task_type = task_cfg["task_type"].lower()
-        task_inputs = preprocess_data(text, task_type, adapter_tokenizer)
-        task_inputs = {k: v.to(self.device) for k, v in task_inputs.items()}
-        print(f"[🧪] 输入模型的字段: {list(task_inputs.keys())}")
+        class_names = task_cfg.get("class_names", []) 
 
+        adapter_skipped = False
 
-        # Step 3: 模型推理 # Step 4: 解码结果
-        with torch.no_grad():
-            if task_type == "summarization":
-                print("[🧠 LORA Adapter] 使用 generate 进行 summarization 推理")
-                for key in ["decoder_input_ids", "decoder_inputs_embeds"]:
-                    if key in task_inputs:
-                        print(f"[⚠️] 移除冲突字段：{key}")
-                        del task_inputs[key]
-                pred_ids = adapter_model.generate(
-                    input_ids=task_inputs["input_ids"],
-                    attention_mask=task_inputs.get("attention_mask"),
-                    max_length=60,
-                    num_beams=4,
-                    early_stopping=True
-                )
-                pred = adapter_tokenizer.decode(pred_ids[0], skip_special_tokens=True).strip()
-                print(f"📤 Adapter输出（摘要）: {pred}")
-            
-            elif task_type == "qa":
-                print("[🧠 LORA Adapter] 执行问答任务（extractive QA）")
-                outputs = adapter_model(**task_inputs)
-                start_idx = torch.argmax(outputs.start_logits, dim=1)
-                end_idx = torch.argmax(outputs.end_logits, dim=1)
-                pred_tokens = task_inputs["input_ids"][0][start_idx: end_idx + 1]
-                pred = adapter_tokenizer.decode(pred_tokens, skip_special_tokens=True)
-                print(f"📤 Adapter输出（类别索引）: {pred}")
+        if is_correct_router:
+            # 找出对应的LORA
+            adapter_info = self.target_adapters[pred_task_name]
+            adapter_tokenizer = adapter_info["tokenizer"]
+            adapter_model = adapter_info["model"]
 
-            elif task_type == "classification":
-                print("[🧠 LORA Adapter] 执行classification分类任务")
-                outputs = adapter_model(**task_inputs)
-                pred = torch.argmax(outputs.logits, dim=-1).item()
-                print(f"📤 Adapter输出（类别索引）: {pred}")
+            # Step 2: Adapter 推理
+            task_inputs = self.build_task_inputs(sample, task_type, adapter_tokenizer)
+            task_inputs = {k: v.to(self.device) for k, v in task_inputs.items()}
 
-            elif task_type == "ner":
-                print("[🧠 LORA Adapter] 执行ner命名实体识别任务")
-                outputs = adapter_model(**task_inputs)  # logits: [1, seq_len, num_labels]
-                predicted_ids = torch.argmax(outputs, dim=-1)  # [1, seq_len]
-                tokens = adapter_tokenizer.convert_ids_to_tokens(task_inputs["input_ids"][0])
-                labels = [adapter_model.config.id2label[idx.item()] for idx in predicted_ids[0]]
+            # Step 3: 模型推理 # Step 4: 解码结果
+            pred = None
+            with torch.no_grad():
+                print(f"[🧠] LORA Adapter 执行 {task_type} 任务-------------------->")
+
+                if task_type == "summarization":
+                    for key in ["decoder_input_ids", "decoder_inputs_embeds"]:
+                        if key in task_inputs:
+                            print(f"[⚠️] 移除冲突字段：{key}")
+                            del task_inputs[key]
+                    pred_ids = adapter_model.generate(
+                        input_ids=task_inputs["input_ids"],
+                        attention_mask=task_inputs.get("attention_mask"),
+                        max_length=60,
+                        num_beams=4,
+                        early_stopping=True
+                    )
+                    pred = adapter_tokenizer.decode(pred_ids[0], skip_special_tokens=True).strip()
                 
-                pred = list(zip(tokens, labels))  # token-label pair
-                preview = list(zip(tokens, labels))[:10]
-                print(f"📤 LORA Adapter输出（前10对 token-label）: {preview}")
+                elif task_type == "qa":
+                    outputs = adapter_model(**task_inputs)
+                    start_idx = torch.argmax(outputs.start_logits, dim=1)
+                    end_idx = torch.argmax(outputs.end_logits, dim=1)
+                    pred_tokens = task_inputs["input_ids"][0][start_idx: end_idx + 1]
+                    pred = adapter_tokenizer.decode(pred_tokens, skip_special_tokens=True)
 
-            else:
-                pred = "Unsupported task type"
+                elif task_type == "classification":
+                    outputs = adapter_model(**task_inputs)
+                    print(f"[DEBUG] logits: {outputs.logits}")
+                    pred = torch.argmax(outputs.logits, dim=-1).item()
+                    print(f"[DEBUG] argmax(pred): {pred}")
 
-        return {
-            "text": text,
-            "task": task_name,
-            "task_id": task_idx,
-            "predicted_label": pred,
-            "top_k_router": top_k_results
-        }
+                elif task_type == "ner":
+                    outputs = adapter_model(**task_inputs)  # logits: [1, seq_len, num_labels]
+                    predicted_ids = torch.argmax(outputs.logits, dim=-1)  # [1, seq_len]
+                    tokens = adapter_tokenizer.convert_ids_to_tokens(task_inputs["input_ids"][0])
+                    labels = [adapter_model.config.id2label[idx.item()] for idx in predicted_ids[0]]
+                    
+                    pred = list(zip(tokens, labels))  # token-label pair
+                    preview = list(zip(tokens, labels))[:10]
+                    print(f"[📤] LORA Adapter输出（前10对 token-label）: {preview}")
+
+                else:
+                    pred = "Unsupported task type"
+
+                if class_names and isinstance(pred, int):
+                    apater_pred_class_name = class_names[pred]
+
+            return {
+                "text": sample.get("text", ""),
+                "task_type": task_type,
+                "expected_task_id": sample.get("task_id", None),
+                "expected_task_name": sample.get("task_name", None),
+                "pred_task_id": pred_task_idx,
+                "pred_task": pred_task_name,
+                "top_k_router": top_k_results,
+                "is_router_correct": sample.get("task_id", -999) == pred_task_idx,
+                "expected_label": sample.get("label", None),
+                "predicted_label": pred,
+                "class_names": class_names if class_names else [],
+                "adapter_pred_class_name": apater_pred_class_name or "",
+                "adapter_is_correct": (pred == sample.get("label")) if isinstance(pred, int) and isinstance(sample.get("label"), int) else None
+            }
+        
+        else:
+            print("❌ Router误判，跳过Adapter执行")
+            adapter_skipped = True
+            return {
+                "text": sample.get("text", ""),
+                "task_type": task_type,
+                "expected_task_id": sample.get("task_id", None),
+                "expected_task_name": sample.get("task_name", None),
+                "pred_task_id": pred_task_idx,
+                "pred_task": pred_task_name,
+                "top_k_router": top_k_results,
+                "expected_label": sample.get("label", None),
+                "adapter_skipped": adapter_skipped
+            }
+
 
 
     
