@@ -23,7 +23,7 @@ class BaseTrainer(ABC):
             raise OSError(f"[ERROR] Failed to create output/log directories: {e}")
 
         try:
-            self.writer = create_writer(log_dir=self.log_dir)
+            self.writer = create_writer(log_dir=self.log_dir, task_name=config['task_name'])
         except Exception as e:
             raise IOError(f"[ERROR] Failed to create TensorBoard writer at {self.log_dir}: {e}")
 

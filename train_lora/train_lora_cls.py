@@ -100,7 +100,7 @@ def main(config_path):
 
     val_loader = DataLoader(
         val_dataset, 
-        batch_size=config['train']['batch_size'],
+        val_batch_size=config['train'].get('val_batch_size', config['train']['batch_size']),
         shuffle=False,
         # collate_fn=custom_collate_fn
         )

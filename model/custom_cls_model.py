@@ -108,7 +108,9 @@ class CustomClassificationModel(nn.Module):
         effective_num_labels = num_labels if num_labels is not None else (config_num_labels or 2)
 
         # ✅ Step 5: 构建自定义分类模型
-        model = cls(backbone=backbone, num_labels=effective_num_labels)
+        # model = cls(backbone=backbone, num_labels=effective_num_labels)
+        model = cls(backbone_dir=paths['model'], num_labels=num_labels or 2)
+
         model.config = config  # 更新 config（否则用的是旧的）
 
         # ✅ Step 6: 加载 adapter（LoRA）

@@ -90,13 +90,17 @@ class SingleClassificationTrainer(BaseTrainer):
 
         # visualize 
         try:
-            plot_confusion_matrix_to_tensorboard(
-                preds=all_preds,
-                labels=all_labels,
-                class_names=self.class_names,
-                writer=self.writer,
-                epoch=epoch
-            )
+            # 🧠 ✅ 只有验证准确率更好时才保存混淆矩阵
+            if acc > self.best_acc:
+                self.best_acc = acc
+                self.best_epoch = epoch
+                plot_confusion_matrix_to_tensorboard(
+                    preds=all_preds,
+                    labels=all_labels,
+                    class_names=self.class_names,
+                    writer=self.writer,
+                    epoch=epoch  # 最佳 epoch
+                )
         except Exception as e:
             print(f"[ERROR] Failed to plot confusion matrix in epoch: {epoch}: {e}")
 
