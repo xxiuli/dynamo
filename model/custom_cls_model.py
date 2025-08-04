@@ -7,14 +7,17 @@ import torch
 from safetensors.torch import load_file  # ✅ 导入 safetensors loader
 
 class CustomClassificationModel(nn.Module):
-    def __init__(self, backbone, num_labels, ignore_mismatched_sizes=False):
+    # def __init__(self, backbone, num_labels, ignore_mismatched_sizes=False):
+    def __init__(self, backbone_dir, num_labels, ignore_mismatched_sizes=False):
+
         super().__init__()
-        self.backbone = backbone
-        # self.backbone = AutoModel.from_pretrained(
-        #     backbone_dir,
-        #     ignore_mismatched_sizes=ignore_mismatched_sizes,
-        #     local_files_only=True  # ✅ 集成时强制使用本地
-        #     )
+        # self.backbone = backbone
+        self.backbone = AutoModel.from_pretrained(
+            backbone_dir,
+            ignore_mismatched_sizes=ignore_mismatched_sizes,
+            # local_files_only=True  # ✅ 集成时强制使用本地
+            local_files_only=False
+            )
         self.config = self.backbone.config #LoRA 的时候，PeftModel 体系会尝试访问 .config.use_return_dict
         
         hidden_size = self.backbone.config.hidden_size #从预训练模型 config 中读取输出维度
