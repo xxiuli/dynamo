@@ -1,0 +1,46 @@
+sampling:
+  seed: 631                # 随机种子，保证可复现性
+  shuffle: true             # 是否打乱采样
+
+tasks:
+  # sst2:
+  #   dataset_name: "glue"
+  #   subset: "sst2"
+  #   test_split: "train"
+  #   test_samples: 500
+
+  # mnli:
+  #   dataset_name: "glue"
+  #   subset: "mnli"
+  #   test_split: "train"
+  #   test_samples: 500
+
+  # qqp:
+  #   dataset_name: "glue"
+  #   subset: "qqp"
+  #   test_split: "train"
+  #   test_samples: 500
+
+  # squad:
+  #   dataset_name: "squad"
+  #   subset: null
+  #   test_split: "train"
+  #   test_samples: 500
+
+  # xsum:
+  #   dataset_name: "xsum"
+  #   subset: null
+  #   test_split: "train"
+  #   test_samples: 500
+
+  # agnews:
+  #   dataset_name: "ag_news"
+  #   subset: null
+  #   test_split: "train"
+  #   test_samples: 500
+
+  conll2003:
+    dataset_name: "conll2003"
+    subset: null
+    test_split: "train"
+    test_samples: 500

@@ -6,17 +6,17 @@ num_labels: 2
 class_names: ['Negative', 'Positive']
 
 # ========= 模型结构 =========
-backbone_model: cardiffnlp/twitter-roberta-base-sentiment
+backbone_model: bert-base-uncased
 
 lora:
-  r: 8  # rank, 4 or 8 or 16
-  alpha: 16 # output = W(x) + (alpha / r) * (A @ B)(x),一般是：8/16/32
+  r: 16  # rank, 4 or 8 or 16
+  alpha: 32 # output = W(x) + (alpha / r) * (A @ B)(x),一般是：8/16/32
   dropout: 0.1 # 通常设置为 0 ~ 0.1，任务简单时可设为 0；
   target_modules: ["query", "value"]  # 也可指定 attention 层子模块.attention 层包括："query", "value", "key", "output"
 
 # ========= 训练参数 =========
 train:
-  seed: 42
+  seed: 6421
   batch_size: 16
   learning_rate: 2e-4
   num_epochs: 5
@@ -35,8 +35,8 @@ early_stopping:
 
 # ========= 路径 =========
 data:
-  train_file: ${DATA_ROOT}/single_lora_data/glue_sst2_train_07052025_1527.json
-  val_file: ${DATA_ROOT}/single_lora_data/glue_sst2_validation_07052025_1527.json
+  train_file: ${DATA_ROOT}/single_lora_data/glue_sst2_train_08042025_1259.json
+  val_file: ${DATA_ROOT}/single_lora_data/glue_sst2_validation_08042025_1259.json
 
 output:
   save_dir: ${DRIVE_ROOT}/DynamoRouterCheckpoints/

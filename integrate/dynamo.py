@@ -175,7 +175,7 @@ class Dynamo:
         
         probs = F.softmax(logits/ self.temperature, dim=-1)
         pred_task_idx = torch.argmax(probs, dim=1).item()
-        pred_task_name = self.id_task_map[pred_task_idx]  # 找到任务名（保持顺序一致）
+        pred_task_name = self.id_task_map[pred_task_idx]  # get task name
 
         # print(f"\n📊 Router 认为这是:{task_name} - {task_idx }任务")
         print(f"\n[🧠] Router 执行-分类-任务-------------------->")
@@ -200,7 +200,17 @@ class Dynamo:
         task_type = task_cfg["task_type"].lower()
         class_names = task_cfg.get("class_names", []) 
 
-        adapter_skipped = False
+        # prepare return info
+        result = {
+                "text": sample.get("text", ""),
+                "task_type": task_type,
+                "expected_task_id": sample.get("task_id", None),
+                "expected_task_name": sample.get("task_name", None),
+                "pred_task_id": pred_task_idx,
+                "pred_task": pred_task_name,
+                "top_k_router": top_k_results,
+                "is_router_correct": is_correct_router
+                }
 
         if is_correct_router:
             # 找出对应的LORA
@@ -260,36 +270,17 @@ class Dynamo:
                 if class_names and isinstance(pred, int):
                     apater_pred_class_name = class_names[pred]
 
-            return {
-                "text": sample.get("text", ""),
-                "task_type": task_type,
-                "expected_task_id": sample.get("task_id", None),
-                "expected_task_name": sample.get("task_name", None),
-                "pred_task_id": pred_task_idx,
-                "pred_task": pred_task_name,
-                "top_k_router": top_k_results,
-                "is_router_correct": sample.get("task_id", -999) == pred_task_idx,
-                "expected_label": sample.get("label", None),
-                "predicted_label": pred,
-                "class_names": class_names if class_names else [],
-                "adapter_pred_class_name": apater_pred_class_name or "",
-                "adapter_is_correct": (pred == sample.get("label")) if isinstance(pred, int) and isinstance(sample.get("label"), int) else None
-            }
-        
-        else:
-            print("❌ Router误判，跳过Adapter执行")
-            adapter_skipped = True
-            return {
-                "text": sample.get("text", ""),
-                "task_type": task_type,
-                "expected_task_id": sample.get("task_id", None),
-                "expected_task_name": sample.get("task_name", None),
-                "pred_task_id": pred_task_idx,
-                "pred_task": pred_task_name,
-                "top_k_router": top_k_results,
-                "expected_label": sample.get("label", None),
-                "adapter_skipped": adapter_skipped
-            }
+                adapter_result ={
+                    "expected_label": sample.get("label", None),
+                    "predicted_label": pred,
+                    "class_names": class_names if class_names else [],
+                    "adapter_pred_class_name": apater_pred_class_name or "",
+                    "adapter_is_correct": (pred == sample.get("label")) if isinstance(pred, int) and isinstance(sample.get("label"), int) else None
+                }
+
+                result.update(adapter_result)
+
+        return result
 
 
 
