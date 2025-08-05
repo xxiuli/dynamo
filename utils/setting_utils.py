@@ -20,11 +20,11 @@ def load_config(path):
     
 def apply_path_placeholders(config):
     #第二个参数是FALLBACK
-    data_root = os.environ.get("DATA_ROOT", "/content/dynamo/data")
-    drive_root = os.environ.get("DRIVE_ROOT", "/content/drive/MyDrive")
+    # data_root = os.environ.get("DATA_ROOT", "/content/dynamo/data")
+    # drive_root = os.environ.get("DRIVE_ROOT", "/content/drive/MyDrive")
 
-    # data_root = os.environ.get("DATA_ROOT", os.path.abspath("data"))        # 本地的 ./data
-    # drive_root = os.environ.get("DRIVE_ROOT", os.path.abspath("test"))      # 本地的 ./test
+    data_root = os.environ.get("DATA_ROOT", os.path.abspath("data"))        # 本地的 ./data
+    drive_root = os.environ.get("DRIVE_ROOT", os.path.abspath("test"))      # 本地的 ./test
 
     def replace_path(value):
         if isinstance(value, str):

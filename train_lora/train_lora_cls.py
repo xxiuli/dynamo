@@ -25,7 +25,7 @@ def load_tokenizer_and_model(config):
 
     # CustomClassificationModel 是： Roberta基础模型+HEAD(nn层)的打包
     base_model = CustomClassificationModel(
-        backbone_dir=config['backbone_model'], 
+        backbone_name=config['backbone_model'], 
         num_labels=config['num_labels'],
         ignore_mismatched_sizes=True
         )
@@ -94,15 +94,13 @@ def main(config_path):
     train_loader = DataLoader(
         train_dataset, 
         batch_size=config['train']['batch_size'], 
-        shuffle=True,
-        # collate_fn=custom_collate_fn
+        shuffle=True
         )
 
     val_loader = DataLoader(
         val_dataset, 
-        val_batch_size=config['train'].get('val_batch_size', config['train']['batch_size']),
-        shuffle=False,
-        # collate_fn=custom_collate_fn
+        batch_size=config['train'].get('val_batch_size', config['train']['batch_size']),
+        shuffle=False
         )
 
     config['train']['steps_per_epoch'] = len(train_loader)

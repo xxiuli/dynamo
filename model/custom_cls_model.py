@@ -7,27 +7,26 @@ import os
 import torch
 from safetensors.torch import load_file  # ✅ 导入 safetensors loader
 
-
 class CustomClassificationModel(nn.Module):
     # def __init__(self, backbone, num_labels, ignore_mismatched_sizes=False):
     def __init__(
             self, 
             backbone: Optional[nn.Module] = None, 
-            backbone_dir: Optional[str] = None,
+            backbone_name: Optional[str] = None,
             num_labels: int = 2, 
             ignore_mismatched_sizes: bool=False
         ):
 
         super().__init__()
 
-        if backbone is not None and backbone_dir is not None:
+        if backbone is not None and backbone_name is not None:
             raise ValueError("只能提供 backbone 或 backbone_dir 中的一个，不可同时提供。")
         
         if backbone is not None:
             self.backbone = backbone
-        elif backbone_dir is not None:
+        elif backbone_name is not None:
             self.backbone = AutoModel.from_pretrained(
-                backbone_dir,
+                backbone_name,
                 ignore_mismatched_sizes=ignore_mismatched_sizes,
                 local_files_only=True # ✅ 集成时强制使用本地
             )
