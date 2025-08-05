@@ -25,7 +25,7 @@ def load_tokenizer_and_model(config):
 
     # CustomClassificationModel 是： Roberta基础模型+HEAD(nn层)的打包
     base_model = CustomClassificationModel(
-        config['backbone_model'], 
+        backbone_dir=config['backbone_model'], 
         num_labels=config['num_labels'],
         ignore_mismatched_sizes=True
         )
