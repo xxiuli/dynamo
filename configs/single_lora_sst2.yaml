@@ -36,8 +36,8 @@ early_stopping:
 
 # ========= 路径 =========
 data:
-  train_file: ${DATA_ROOT}/single_lora_data/glue_sst2_train_08042025_1259.json
-  val_file: ${DATA_ROOT}/single_lora_data/glue_sst2_validation_08042025_1259.json
+  train_file: ${DATA_ROOT}/single_lora_data/glue_sst2_train_08052025_1057.json
+  val_file: ${DATA_ROOT}/single_lora_data/glue_sst2_validation_08052025_1057.json
 
 output:
   save_dir: ${DRIVE_ROOT}/DynamoRouterCheckpoints/

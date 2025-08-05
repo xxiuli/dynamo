@@ -1,5 +1,5 @@
 sampling:
-  seed: 42                  # 随机种子，保证可复现性
+  seed: 7342                 # 随机种子，保证可复现性
   shuffle: true             # 是否打乱采样
 
 tasks:
@@ -9,23 +9,23 @@ tasks:
     train_split: "train"
     val_split: "validation"
     train_samples: 10000
-    val_samples: 200
+    val_samples: 2000
 
   mnli:
     dataset_name: "glue"
     subset: "mnli"
     train_split: "train"
     val_split: "validation_matched"
-    train_samples: 5000
-    val_samples: 1000
+    train_samples: 10000
+    val_samples: 2000
 
   qqp:
     dataset_name: "glue"
     subset: "qqp"
     train_split: "train"
     val_split: "validation"
-    train_samples: 5000
-    val_samples: 1000
+    train_samples: 10000
+    val_samples: 2000
 
   squad:
     dataset_name: "squad"
@@ -40,16 +40,16 @@ tasks:
     subset: null
     train_split: "train"
     val_split: "validation"
-    train_samples: 5000
-    val_samples: 1000
+    train_samples: 10000
+    val_samples: 2000
 
   agnews:
     dataset_name: "ag_news"
     subset: null
     train_split: "train"
     val_split: "train"          # 没有官方 val split，可以用本地划分
-    train_samples: 5000
-    val_samples: 1000
+    train_samples: 10000
+    val_samples: 2000
 
   conll2003:
     dataset_name: "conll2003"

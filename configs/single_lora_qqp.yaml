@@ -31,8 +31,8 @@ early_stopping:
   mode: max           # val_loss是min，val_acc是max, val_f1是max
 
 data:
-  train_file: ${DATA_ROOT}/single_lora_data/glue_qqp_train_07052025_1527.json
-  val_file: ${DATA_ROOT}/single_lora_data/glue_qqp_validation_07052025_1527.json
+  train_file: ${DATA_ROOT}/single_lora_data/glue_qqp_train_08052025_1057.json
+  val_file: ${DATA_ROOT}/single_lora_data/glue_qqp_validation_08052025_1057.json
 
 output:
   save_dir: ${DRIVE_ROOT}/DynamoRouterCheckpoints/

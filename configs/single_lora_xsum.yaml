@@ -36,8 +36,8 @@ early_stopping:
 
 # ========= 数据路径 =========
 data:
-  train_file: ${DATA_ROOT}/single_lora_data/xsum_train_07052025_1605.json
-  val_file: ${DATA_ROOT}/single_lora_data/xsum_validation_07052025_1605.json
+  train_file: ${DATA_ROOT}/single_lora_data/xsum_train_08052025_1057.json
+  val_file: ${DATA_ROOT}/single_lora_data/xsum_validation_08052025_1057.json
 
 # ========= 输出路径 =========
 output:

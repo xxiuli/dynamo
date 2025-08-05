@@ -30,8 +30,8 @@ early_stopping:
   mode: max          # val_loss是min，val_acc是max, val_f1是max
 
 data:
-  train_file: ${DATA_ROOT}/single_lora_data/conll2003_train_07052025_1605.json
-  val_file: ${DATA_ROOT}/single_lora_data/conll2003_validation_07052025_1605.json
+  train_file: ${DATA_ROOT}/single_lora_data/conll2003_train_08052025_1057.json
+  val_file: ${DATA_ROOT}/single_lora_data/conll2003_validation_08052025_1057.json
   label2id_file: ${DATA_ROOT}/label2id_for_conll03.json 
 
 output:

@@ -68,6 +68,7 @@ def get_samples(seed, shuffle, task_dic):
         # 5. 采样验证集（可选）
         if val_data is not None:
             val_samples = val_data if val_size == -1 else val_data.select(range(min(val_size, len(val_data))))
+            val_split = 'val' if val_split=="train" else val_split
             val_path = os.path.join(OUTPUT_DIR, f'{file_prefix}_{val_split}_{timestamp}.json')
             val_samples.to_json(val_path, orient="records", lines=True, force_ascii=False)
             print(f"[✓] Saved val samples to {val_path}")

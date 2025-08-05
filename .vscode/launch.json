@@ -15,8 +15,8 @@
       "program": "${workspaceFolder}/data/scripts/single_sampling.py",
       "args": [
         "--config_doc", "data/download_configs/single_sampling_tasks.yaml",
-        "--task", "sst2", 
-        // "--task", "xsum", "conll2003",
+        // "--task", "agnews", 
+        "--task", "sst2", "mnli", "qqp", "squad", "xsum", "conll2003"
         // "--task", "sst2", "mnli", "qqp", "squad", "xsum", "agnews", "conll2003",
       ],
       "console": "integratedTerminal"
