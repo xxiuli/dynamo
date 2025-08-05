@@ -8,9 +8,9 @@ import numpy as np
 from datetime import datetime
 import os
 
-def create_writer(log_dir):
+def create_writer(log_dir, task_name):
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    final_log_dir = os.path.join(log_dir, timestamp)
+    final_log_dir = os.path.join(log_dir, f"{task_name}_{timestamp}")
     os.makedirs(final_log_dir, exist_ok=True)
     return SummaryWriter(final_log_dir)
 

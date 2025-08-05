@@ -37,6 +37,7 @@ def get_all_adapters(tasks, device):
             tokenizer_cache[trained_lora_dir] = tokenizer
 
         model = load_adapter_model(task_cfg, adapter_cfg, device)
+        # model = load_adapter_model(trained_lora_dir, adapter_cfg, device)
 
         target_adapters[task_name] = {
                 "tokenizer": tokenizer,
@@ -52,6 +53,7 @@ def load_adapter_model(task_cfg, adapter_cfg, device):
         # ${DRIVE_ROOT}/DynamoRouterCheckpoints/adapter_agnews
         model = CustomClassificationModel.from_pretrained(
             task_cfg['model_paths'],
+            # task_cfg['adapter_path'],
             num_labels=adapter_cfg['num_labels']
             ).to(device)
         return model

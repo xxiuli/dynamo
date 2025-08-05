@@ -4,7 +4,7 @@ task_type: classification
 num_labels: 4
 class_names: ['World', 'Sports', 'Business', 'Sci/Tech']
 
-backbone_model: distilbert-base-uncased
+backbone_model: bert-base-uncased
 
 lora:
   r: 8
@@ -13,7 +13,7 @@ lora:
   target_modules: ["q_lin", "v_lin"]
 
 train:
-  seed: 42
+  seed: 428
   batch_size: 16
   learning_rate: 2e-4
   num_epochs: 3

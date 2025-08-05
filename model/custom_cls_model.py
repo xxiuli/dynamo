@@ -1,3 +1,4 @@
+from typing import Optional
 from transformers import AutoModel,AutoConfig
 from heads.classification_head import ClassificationHead
 import torch.nn as nn
@@ -6,18 +7,33 @@ import os
 import torch
 from safetensors.torch import load_file  # ✅ 导入 safetensors loader
 
+
 class CustomClassificationModel(nn.Module):
     # def __init__(self, backbone, num_labels, ignore_mismatched_sizes=False):
-    def __init__(self, backbone_dir, num_labels, ignore_mismatched_sizes=False):
+    def __init__(
+            self, 
+            backbone: Optional[nn.Module] = None, 
+            backbone_dir: Optional[str] = None,
+            num_labels: int = 2, 
+            ignore_mismatched_sizes: bool=False
+        ):
 
         super().__init__()
-        # self.backbone = backbone
-        self.backbone = AutoModel.from_pretrained(
-            backbone_dir,
-            ignore_mismatched_sizes=ignore_mismatched_sizes,
-            # local_files_only=True  # ✅ 集成时强制使用本地
-            local_files_only=False
+
+        if backbone is not None and backbone_dir is not None:
+            raise ValueError("只能提供 backbone 或 backbone_dir 中的一个，不可同时提供。")
+        
+        if backbone is not None:
+            self.backbone = backbone
+        elif backbone_dir is not None:
+            self.backbone = AutoModel.from_pretrained(
+                backbone_dir,
+                ignore_mismatched_sizes=ignore_mismatched_sizes,
+                local_files_only=True # ✅ 集成时强制使用本地
             )
+        else:
+            raise ValueError("必须提供 backbone 或 backbone_dir 其中之一。")
+      
         self.config = self.backbone.config #LoRA 的时候，PeftModel 体系会尝试访问 .config.use_return_dict
         
         hidden_size = self.backbone.config.hidden_size #从预训练模型 config 中读取输出维度
@@ -101,6 +117,7 @@ class CustomClassificationModel(nn.Module):
             raise FileNotFoundError(f"❌ Missing pytorch_model.bin in {model_path}")
         state_dict = torch.load(model_path, map_location="cpu")
         backbone.load_state_dict(state_dict)
+
         print("✅ Loaded backbone from config + weights")
 
         # ✅ Step 4: 获取 num_labels
@@ -108,8 +125,7 @@ class CustomClassificationModel(nn.Module):
         effective_num_labels = num_labels if num_labels is not None else (config_num_labels or 2)
 
         # ✅ Step 5: 构建自定义分类模型
-        # model = cls(backbone=backbone, num_labels=effective_num_labels)
-        model = cls(backbone_dir=paths['model'], num_labels=num_labels or 2)
+        model = cls(backbone=backbone, num_labels=effective_num_labels)
 
         model.config = config  # 更新 config（否则用的是旧的）
 
@@ -119,6 +135,14 @@ class CustomClassificationModel(nn.Module):
             model.load_state_dict(load_file(adapter_weights_path), strict=False)
         else:
             print("⚠️ adapter_model.safetensors not found, skipping LoRA load")
+
+         # ✅ Step 7: 加载自定义的分类头（Head）
+        head_path = paths["head"]
+        if head_path and os.path.exists(head_path):
+            print("🧠 Loading head weights from:", head_path)
+            model.head.load_state_dict(torch.load(head_path, map_location="cpu"))
+        else:
+            print("⚠️ head.pth not found, using randomly initialized head.")
 
         return model
 
