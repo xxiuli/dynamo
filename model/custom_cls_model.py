@@ -28,7 +28,8 @@ class CustomClassificationModel(nn.Module):
             self.backbone = AutoModel.from_pretrained(
                 backbone_name,
                 ignore_mismatched_sizes=ignore_mismatched_sizes,
-                local_files_only=True # ✅ 集成时强制使用本地
+                # local_files_only=True # ✅ 集成时强制使用本地
+                local_files_only=False
             )
         else:
             raise ValueError("必须提供 backbone 或 backbone_dir 其中之一。")
