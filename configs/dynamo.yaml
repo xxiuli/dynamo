@@ -1,5 +1,5 @@
 #dynamo.yaml
-# ========= 路由器模型配置 =========
+# ========= router config =========
 router:
   task_type: classification
   config_path: configs/router.yaml
@@ -10,7 +10,7 @@ router:
   num_task: 7
   temperature: 0.5
 
-# ========= 任务映射配置 =========
+# ========= task config =========
 tasks:
   sst2:
     task_id: 0

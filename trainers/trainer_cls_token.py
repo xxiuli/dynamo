@@ -8,11 +8,10 @@ from utils.tensorboard_utils import plot_confusion_matrix_to_tensorboard
 class TokenClassificationTrainer(BaseTrainer):
     def __init__(self, model, config, device, tokenizer):
         super().__init__(model, config, device, tokenizer)
+
         try:
             self.label2id = config['label2id']
             self.id2label = {v: k for k, v in self.label2id.items()}
-            # print(f"[debug] CHECK 1: {model.config.label2id}")
-            # print(f"[debug] CHECK 2: {model.config.id2label}")
         except KeyError as e:
             raise ValueError(f"[ERROR] label2id not found in config: {e}")
 
@@ -44,7 +43,7 @@ class TokenClassificationTrainer(BaseTrainer):
             with torch.no_grad():
                 for i, batch in enumerate(val_loader):
                     try:
-                        # 如果本地调试，limit_batches=2， 那么就跑2个EPOACH就停了
+                        #for local debug，limit_batches=2
                         # if limit_batches is not None and i >= limit_batches:
                         #     break
 
@@ -80,22 +79,11 @@ class TokenClassificationTrainer(BaseTrainer):
                         batch_keys = list(batch.keys()) if isinstance(batch, dict) else "Unavailable"
                         print(f"[WARNING] Skipped batch {i} due to error: {e}. Batch keys: {batch_keys}")
 
-            # try: 
-            #     if isinstance(all_preds, list):
-            #         all_preds = torch.cat(all_preds).cpu().numpy()
-            #     if isinstance(all_labels, list):
-            #         all_labels = torch.cat(all_labels).cpu().numpy()
-
-            #     assert len(all_preds) == len(all_labels), f"preds: {len(all_preds)}, labels: {len(all_labels)}"
-            # except Exception as e:
-            #     print(f"[ERROR] Failed to concat predictions: {e}")
-            #     return {"val_loss": float("inf"), "val_acc": 0.0}
-
             if len(all_preds) == 0:
                 print(f"[WARNING] No valid predictions to evaluate at epoch {epoch}")
                 return {"val_loss": float("inf"), "val_acc": 0.0}
 
-            val_loss = total_loss / max(1, len(val_loader)) # 防止被0除
+            val_loss = total_loss / max(1, len(val_loader)) 
 
             try: 
                 label_ids = sorted(self.id2label.keys())
@@ -117,7 +105,7 @@ class TokenClassificationTrainer(BaseTrainer):
                 report = "Report unavailable"
                 macro_f1 = 0.0
 
-            # 返回 dict，让 BaseTrainer 可以通用读取任何 metric
+            # return dict，so that BaseTrainer can read any format of metric
             return {
                 "val_loss": val_loss,
                 "val_f1": macro_f1

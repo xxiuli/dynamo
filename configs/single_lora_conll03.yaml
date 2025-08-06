@@ -37,12 +37,12 @@ data:
 output:
   save_dir: ${DRIVE_ROOT}/DynamoRouterCheckpoints/
   save_best_only: true
-  monitor_metric: val_f1  # 自动对齐 early_stopping
+  monitor_metric: val_f1  # keep same with: early_stopping
   save_lora_adapter: true
   save_task_head: true
   log_dir: ${DRIVE_ROOT}/DynamoRouterLogs/
 
-# ========= 调试专用 =========
+# ========= for debug =========
 # 调试时EPOCH可改为: num_epochs: 1
 # 去COLAB训练时要把 skip_training: false, limit_batches: None 
 debug:
