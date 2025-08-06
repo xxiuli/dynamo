@@ -10,7 +10,7 @@ lora:
   r: 8
   alpha: 16
   dropout: 0.1
-  target_modules: ["q_lin", "v_lin"]
+  target_modules: ["query", "value"]
 
 train:
   seed: 428
